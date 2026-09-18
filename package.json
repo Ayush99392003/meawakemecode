@@ -1,0 +1,26 @@
+{
+  "name": "interview-prep-platform",
+  "version": "1.0.0",
+  "description": "30-Day Technical Interview Prep Platform with Firebase and Firestore backend",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "worker": "cd frontend && node email-worker.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:py": "python -m pytest tests_py -v",
+    "test:all": "npm run test && npm run test:py"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "nodemailer": "^10.3.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}
