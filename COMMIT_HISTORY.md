@@ -12,3 +12,7 @@
 - **Message**: `docs(architecture): draft high-level 30-day curriculum specification`
 - **Timestamp**: `2026-09-18T20:05:30+05:30`
 
+### [2026-09-19 10:14:22] Commit #4
+- **Message**: `feat(types): define domain models for problems, progress, and badges`
+- **Timestamp**: `2026-09-19T10:14:22+05:30`
+
