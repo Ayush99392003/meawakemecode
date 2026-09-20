@@ -28,3 +28,7 @@
 - **Message**: `feat(curriculum): compile Day 1-3 array manipulation problem sets`
 - **Timestamp**: `2026-09-20T10:14:22+05:30`
 
+### [2026-09-20 15:28:45] Commit #8
+- **Message**: `feat(curriculum): compile Day 4-5 two-pointer and prefix sum problems`
+- **Timestamp**: `2026-09-20T15:28:45+05:30`
+
