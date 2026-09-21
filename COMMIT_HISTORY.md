@@ -44,3 +44,7 @@
 - **Message**: `docs(cs-funda): create detailed explanation of page faults and TLB misses`
 - **Timestamp**: `2026-09-21T15:28:45+05:30`
 
+### [2026-09-21 20:05:30] Commit #12
+- **Message**: `feat(mcq): draft Day 1 operating systems conceptual questions`
+- **Timestamp**: `2026-09-21T20:05:30+05:30`
+
