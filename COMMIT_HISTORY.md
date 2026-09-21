@@ -40,3 +40,7 @@
 - **Message**: `feat(cs-funda): add OS virtual memory, paging, and address translation modules`
 - **Timestamp**: `2026-09-21T10:14:22+05:30`
 
+### [2026-09-21 15:28:45] Commit #11
+- **Message**: `docs(cs-funda): create detailed explanation of page faults and TLB misses`
+- **Timestamp**: `2026-09-21T15:28:45+05:30`
+
