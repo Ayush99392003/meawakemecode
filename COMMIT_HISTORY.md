@@ -52,3 +52,7 @@
 - **Message**: `feat(system-design): compile distributed systems latency numbers guide`
 - **Timestamp**: `2026-09-22T10:14:22+05:30`
 
+### [2026-09-22 15:28:45] Commit #14
+- **Message**: `feat(system-design): document CAP vs PACELC theorems with real-world examples`
+- **Timestamp**: `2026-09-22T15:28:45+05:30`
+
