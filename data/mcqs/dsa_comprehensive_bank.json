@@ -1,0 +1,2902 @@
+[
+  {
+    "id": "day_1_mcq_1",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Amortized O(1) resizing mechanics",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Amortized O(1) resizing mechanics: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Amortized O(1) resizing mechanics\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Amortized O(1) resizing mechanics and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Amortized O(1) resizing mechanics is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Amortized O(1) resizing mechanics ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 1
+  },
+  {
+    "id": "day_1_mcq_2",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Hash function distribution",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Hash function distribution: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Hash function distribution and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Hash function distribution is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Hash function distribution ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 2
+  },
+  {
+    "id": "day_1_mcq_3",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Separate chaining vs Open Addressing",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Separate chaining vs Open Addressing: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Separate chaining vs Open Addressing\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Separate chaining vs Open Addressing and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Separate chaining vs Open Addressing is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Separate chaining vs Open Addressing ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 3
+  },
+  {
+    "id": "day_1_mcq_4",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Robin Hood Hashing",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Robin Hood Hashing: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Robin Hood Hashing and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Robin Hood Hashing is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Robin Hood Hashing ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "day_1_mcq_5",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Load factor threshold (0.75 in Java)",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Load factor threshold (0.75 in Java): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Load factor threshold (0.75 in Java)\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Load factor threshold (0.75 in Java) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Load factor threshold (0.75 in Java) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Load factor threshold (0.75 in Java) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "day_1_mcq_6",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - C++ anti-hash hacks on Codeforces",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining C++ anti-hash hacks on Codeforces: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing C++ anti-hash hacks on Codeforces and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if C++ anti-hash hacks on Codeforces is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding C++ anti-hash hacks on Codeforces ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 6
+  },
+  {
+    "id": "day_1_mcq_7",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Python dict insertion order guarantee",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Python dict insertion order guarantee: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Python dict insertion order guarantee\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Python dict insertion order guarantee and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Python dict insertion order guarantee is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Python dict insertion order guarantee ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 7
+  },
+  {
+    "id": "day_1_mcq_8",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Primitive boxing in Java Collections",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Primitive boxing in Java Collections: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Primitive boxing in Java Collections and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Primitive boxing in Java Collections is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Primitive boxing in Java Collections ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "day_1_mcq_9",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Two Sum complement lookup",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Two Sum complement lookup: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Two Sum complement lookup\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Two Sum complement lookup and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Two Sum complement lookup is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Two Sum complement lookup ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "day_1_mcq_10",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Group Anagrams canonical key choices",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Group Anagrams canonical key choices: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Group Anagrams canonical key choices and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Group Anagrams canonical key choices is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Group Anagrams canonical key choices ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "day_1_mcq_11",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Frequency counting with fixed 26-char arrays",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Frequency counting with fixed 26-char arrays: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Frequency counting with fixed 26-char arrays\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Frequency counting with fixed 26-char arrays and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Frequency counting with fixed 26-char arrays is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Frequency counting with fixed 26-char arrays ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 11
+  },
+  {
+    "id": "day_1_mcq_12",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Longest Consecutive Sequence hash set traversal",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Longest Consecutive Sequence hash set traversal: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Longest Consecutive Sequence hash set traversal and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Longest Consecutive Sequence hash set traversal is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Longest Consecutive Sequence hash set traversal ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 12
+  },
+  {
+    "id": "day_1_mcq_13",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - In-place subarray marking using signs",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining In-place subarray marking using signs: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for In-place subarray marking using signs\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing In-place subarray marking using signs and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if In-place subarray marking using signs is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding In-place subarray marking using signs ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "day_1_mcq_14",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Kadane's algorithm vs prefix sum",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Kadane's algorithm vs prefix sum: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Kadane's algorithm vs prefix sum and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Kadane's algorithm vs prefix sum is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Kadane's algorithm vs prefix sum ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "day_1_mcq_15",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Space-time trade-off in hash tables",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Space-time trade-off in hash tables: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Space-time trade-off in hash tables\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Space-time trade-off in hash tables and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Space-time trade-off in hash tables is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Space-time trade-off in hash tables ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "day_1_mcq_16",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Collision degradation to O(N)",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Collision degradation to O(N): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Collision degradation to O(N) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Collision degradation to O(N) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Collision degradation to O(N) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 16
+  },
+  {
+    "id": "day_1_mcq_17",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Fast I/O for 10^6 array inputs",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Fast I/O for 10^6 array inputs: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Fast I/O for 10^6 array inputs\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Fast I/O for 10^6 array inputs and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Fast I/O for 10^6 array inputs is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Fast I/O for 10^6 array inputs ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 17
+  },
+  {
+    "id": "day_1_mcq_18",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Array memory contiguous cache lines",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Array memory contiguous cache lines: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Array memory contiguous cache lines and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Array memory contiguous cache lines is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Array memory contiguous cache lines ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 18
+  },
+  {
+    "id": "day_1_mcq_19",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Dynamic array growth factor (1.5x in MSVC vs 2x in GCC)",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Dynamic array growth factor (1.5x in MSVC vs 2x in GCC): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Arrays & Hash Maps algorithmic template\nint solve() {\n  // Implementation nuance for Dynamic array growth factor (1.5x in MSVC vs 2x in GCC)\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Dynamic array growth factor (1.5x in MSVC vs 2x in GCC) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Dynamic array growth factor (1.5x in MSVC vs 2x in GCC) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Dynamic array growth factor (1.5x in MSVC vs 2x in GCC) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "day_1_mcq_20",
+    "dayId": "day_1",
+    "topic": "Arrays & Hash Maps - Custom hash functions with splitmix64",
+    "question": "In technical interview algorithmic analysis of Arrays & Hash Maps, specifically examining Custom hash functions with splitmix64: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Custom hash functions with splitmix64 and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Custom hash functions with splitmix64 is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Arrays & Hash Maps, understanding Custom hash functions with splitmix64 ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 20
+  },
+  {
+    "id": "day_2_mcq_1",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Converging pointers on sorted arrays",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Converging pointers on sorted arrays: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Converging pointers on sorted arrays\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Converging pointers on sorted arrays and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Converging pointers on sorted arrays is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Converging pointers on sorted arrays ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 1
+  },
+  {
+    "id": "day_2_mcq_2",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Monotonicity condition requirement",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Monotonicity condition requirement: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Monotonicity condition requirement and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Monotonicity condition requirement is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Monotonicity condition requirement ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 2
+  },
+  {
+    "id": "day_2_mcq_3",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Fast and slow pointer gap mechanics",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Fast and slow pointer gap mechanics: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Fast and slow pointer gap mechanics\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Fast and slow pointer gap mechanics and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Fast and slow pointer gap mechanics is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Fast and slow pointer gap mechanics ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 3
+  },
+  {
+    "id": "day_2_mcq_4",
+    "dayId": "day_2",
+    "topic": "Two Pointers - 3Sum duplicate elimination",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining 3Sum duplicate elimination: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing 3Sum duplicate elimination and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if 3Sum duplicate elimination is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding 3Sum duplicate elimination ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "day_2_mcq_5",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Container With Most Water greedy proof",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Container With Most Water greedy proof: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Container With Most Water greedy proof\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Container With Most Water greedy proof and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Container With Most Water greedy proof is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Container With Most Water greedy proof ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "day_2_mcq_6",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Trapping Rain Water two pointers vs stack",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Trapping Rain Water two pointers vs stack: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Trapping Rain Water two pointers vs stack and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Trapping Rain Water two pointers vs stack is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Trapping Rain Water two pointers vs stack ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 6
+  },
+  {
+    "id": "day_2_mcq_7",
+    "dayId": "day_2",
+    "topic": "Two Pointers - In-place array partition without extra space",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining In-place array partition without extra space: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for In-place array partition without extra space\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing In-place array partition without extra space and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if In-place array partition without extra space is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding In-place array partition without extra space ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 7
+  },
+  {
+    "id": "day_2_mcq_8",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Dutch National Flag 3-way partition",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Dutch National Flag 3-way partition: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Dutch National Flag 3-way partition and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Dutch National Flag 3-way partition is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Dutch National Flag 3-way partition ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "day_2_mcq_9",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Valid Palindrome non-alphanumeric skipping",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Valid Palindrome non-alphanumeric skipping: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Valid Palindrome non-alphanumeric skipping\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Valid Palindrome non-alphanumeric skipping and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Valid Palindrome non-alphanumeric skipping is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Valid Palindrome non-alphanumeric skipping ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "day_2_mcq_10",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Subarrays with Product Less Than K",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Subarrays with Product Less Than K: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarrays with Product Less Than K and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarrays with Product Less Than K is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Subarrays with Product Less Than K ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "day_2_mcq_11",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Two Sum II sorted array index bounds",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Two Sum II sorted array index bounds: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Two Sum II sorted array index bounds\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Two Sum II sorted array index bounds and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Two Sum II sorted array index bounds is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Two Sum II sorted array index bounds ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 11
+  },
+  {
+    "id": "day_2_mcq_12",
+    "dayId": "day_2",
+    "topic": "Two Pointers - 4Sum recursive reduction to 2Sum",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining 4Sum recursive reduction to 2Sum: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing 4Sum recursive reduction to 2Sum and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if 4Sum recursive reduction to 2Sum is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding 4Sum recursive reduction to 2Sum ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 12
+  },
+  {
+    "id": "day_2_mcq_13",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Merge Sorted Array in-place from backwards",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Merge Sorted Array in-place from backwards: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Merge Sorted Array in-place from backwards\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Merge Sorted Array in-place from backwards and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Merge Sorted Array in-place from backwards is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Merge Sorted Array in-place from backwards ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "day_2_mcq_14",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Move Zeroes maintaining relative order",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Move Zeroes maintaining relative order: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Move Zeroes maintaining relative order and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Move Zeroes maintaining relative order is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Move Zeroes maintaining relative order ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "day_2_mcq_15",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Squares of a Sorted Array from both ends",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Squares of a Sorted Array from both ends: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Squares of a Sorted Array from both ends\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Squares of a Sorted Array from both ends and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Squares of a Sorted Array from both ends is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Squares of a Sorted Array from both ends ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "day_2_mcq_16",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Sort Colors one-pass Dutch National Flag",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Sort Colors one-pass Dutch National Flag: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Sort Colors one-pass Dutch National Flag and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Sort Colors one-pass Dutch National Flag is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Sort Colors one-pass Dutch National Flag ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 16
+  },
+  {
+    "id": "day_2_mcq_17",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Comparing string with backspaces",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Comparing string with backspaces: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Comparing string with backspaces\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Comparing string with backspaces and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Comparing string with backspaces is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Comparing string with backspaces ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 17
+  },
+  {
+    "id": "day_2_mcq_18",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Longest Mountain in Array peak expansion",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Longest Mountain in Array peak expansion: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Longest Mountain in Array peak expansion and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Longest Mountain in Array peak expansion is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Longest Mountain in Array peak expansion ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 18
+  },
+  {
+    "id": "day_2_mcq_19",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Boats to Save People greedy pairing",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Boats to Save People greedy pairing: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Two Pointers algorithmic template\nint solve() {\n  // Implementation nuance for Boats to Save People greedy pairing\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Boats to Save People greedy pairing and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Boats to Save People greedy pairing is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Boats to Save People greedy pairing ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "day_2_mcq_20",
+    "dayId": "day_2",
+    "topic": "Two Pointers - Shortest Unsorted Continuous Subarray boundaries",
+    "question": "In technical interview algorithmic analysis of Two Pointers, specifically examining Shortest Unsorted Continuous Subarray boundaries: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Shortest Unsorted Continuous Subarray boundaries and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Shortest Unsorted Continuous Subarray boundaries is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Two Pointers, understanding Shortest Unsorted Continuous Subarray boundaries ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 20
+  },
+  {
+    "id": "day_3_mcq_1",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Fixed window vs Dynamic window state",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Fixed window vs Dynamic window state: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Fixed window vs Dynamic window state\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Fixed window vs Dynamic window state and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Fixed window vs Dynamic window state is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Fixed window vs Dynamic window state ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 1
+  },
+  {
+    "id": "day_3_mcq_2",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Window shrink while condition violated",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Window shrink while condition violated: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Window shrink while condition violated and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Window shrink while condition violated is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Window shrink while condition violated ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 2
+  },
+  {
+    "id": "day_3_mcq_3",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Amortized O(N) runtime proof",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Amortized O(N) runtime proof: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Amortized O(N) runtime proof\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Amortized O(N) runtime proof and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Amortized O(N) runtime proof is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Amortized O(N) runtime proof ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 3
+  },
+  {
+    "id": "day_3_mcq_4",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Minimum Window Substring two-hashmap match count",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Minimum Window Substring two-hashmap match count: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Minimum Window Substring two-hashmap match count and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Minimum Window Substring two-hashmap match count is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Minimum Window Substring two-hashmap match count ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "day_3_mcq_5",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Longest Substring Without Repeating Characters",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Longest Substring Without Repeating Characters: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Longest Substring Without Repeating Characters\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Longest Substring Without Repeating Characters and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Longest Substring Without Repeating Characters is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Longest Substring Without Repeating Characters ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "day_3_mcq_6",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Longest Repeating Character Replacement",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Longest Repeating Character Replacement: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Longest Repeating Character Replacement and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Longest Repeating Character Replacement is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Longest Repeating Character Replacement ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 6
+  },
+  {
+    "id": "day_3_mcq_7",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1))",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1)): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1))\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1)) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1)) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Subarrays with K Different Integers (exact(K) = atMost(K) - atMost(K-1)) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 7
+  },
+  {
+    "id": "day_3_mcq_8",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Sliding Window Maximum deque monotonic property",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Sliding Window Maximum deque monotonic property: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Sliding Window Maximum deque monotonic property and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Sliding Window Maximum deque monotonic property is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Sliding Window Maximum deque monotonic property ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "day_3_mcq_9",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Max Consecutive Ones III with K flips",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Max Consecutive Ones III with K flips: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Max Consecutive Ones III with K flips\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Max Consecutive Ones III with K flips and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Max Consecutive Ones III with K flips is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Max Consecutive Ones III with K flips ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "day_3_mcq_10",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Fruit Into Baskets (at most 2 distinct elements)",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Fruit Into Baskets (at most 2 distinct elements): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Fruit Into Baskets (at most 2 distinct elements) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Fruit Into Baskets (at most 2 distinct elements) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Fruit Into Baskets (at most 2 distinct elements) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "day_3_mcq_11",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Permutation in String frequency match",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Permutation in String frequency match: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Permutation in String frequency match\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Permutation in String frequency match and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Permutation in String frequency match is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Permutation in String frequency match ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 11
+  },
+  {
+    "id": "day_3_mcq_12",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Find All Anagrams in a String",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Find All Anagrams in a String: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Find All Anagrams in a String and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Find All Anagrams in a String is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Find All Anagrams in a String ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 12
+  },
+  {
+    "id": "day_3_mcq_13",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Maximum Average Subarray I fixed size k",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Maximum Average Subarray I fixed size k: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Maximum Average Subarray I fixed size k\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Maximum Average Subarray I fixed size k and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Maximum Average Subarray I fixed size k is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Maximum Average Subarray I fixed size k ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "day_3_mcq_14",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Minimum Size Subarray Sum >= target",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Minimum Size Subarray Sum >= target: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Minimum Size Subarray Sum >= target and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Minimum Size Subarray Sum >= target is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Minimum Size Subarray Sum >= target ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "day_3_mcq_15",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Subarray Product Less than K positive integers",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Subarray Product Less than K positive integers: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Subarray Product Less than K positive integers\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarray Product Less than K positive integers and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarray Product Less than K positive integers is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Subarray Product Less than K positive integers ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "day_3_mcq_16",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Grumpy Bookstore Owner fixed satisfaction boost",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Grumpy Bookstore Owner fixed satisfaction boost: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Grumpy Bookstore Owner fixed satisfaction boost and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Grumpy Bookstore Owner fixed satisfaction boost is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Grumpy Bookstore Owner fixed satisfaction boost ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 16
+  },
+  {
+    "id": "day_3_mcq_17",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Diet Plan Performance sliding total",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Diet Plan Performance sliding total: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Diet Plan Performance sliding total\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Diet Plan Performance sliding total and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Diet Plan Performance sliding total is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Diet Plan Performance sliding total ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 17
+  },
+  {
+    "id": "day_3_mcq_18",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Get Equal Substrings Within Budget",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Get Equal Substrings Within Budget: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Get Equal Substrings Within Budget and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Get Equal Substrings Within Budget is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Get Equal Substrings Within Budget ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 18
+  },
+  {
+    "id": "day_3_mcq_19",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Count Number of Nice Subarrays",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Count Number of Nice Subarrays: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Sliding Window algorithmic template\nint solve() {\n  // Implementation nuance for Count Number of Nice Subarrays\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Count Number of Nice Subarrays and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Count Number of Nice Subarrays is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Count Number of Nice Subarrays ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "day_3_mcq_20",
+    "dayId": "day_3",
+    "topic": "Sliding Window - Sliding window memory complexity O(K)",
+    "question": "In technical interview algorithmic analysis of Sliding Window, specifically examining Sliding window memory complexity O(K): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Sliding window memory complexity O(K) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Sliding window memory complexity O(K) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Sliding Window, understanding Sliding window memory complexity O(K) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 20
+  },
+  {
+    "id": "day_4_mcq_1",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i]",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i]: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i]\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i] and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i] is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding 1D Prefix sum recurrence prefix[i+1] = prefix[i] + a[i] ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 1
+  },
+  {
+    "id": "day_4_mcq_2",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - O(1) range sum query prefix[r+1] - prefix[l]",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining O(1) range sum query prefix[r+1] - prefix[l]: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing O(1) range sum query prefix[r+1] - prefix[l] and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if O(1) range sum query prefix[r+1] - prefix[l] is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding O(1) range sum query prefix[r+1] - prefix[l] ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 2
+  },
+  {
+    "id": "day_4_mcq_3",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Difference array d[l] += x, d[r+1] -= x",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Difference array d[l] += x, d[r+1] -= x: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Difference array d[l] += x, d[r+1] -= x\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Difference array d[l] += x, d[r+1] -= x and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Difference array d[l] += x, d[r+1] -= x is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Difference array d[l] += x, d[r+1] -= x ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 3
+  },
+  {
+    "id": "day_4_mcq_4",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Prefix sum frequency map with {0: 1} base case",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Prefix sum frequency map with {0: 1} base case: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Prefix sum frequency map with {0: 1} base case and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Prefix sum frequency map with {0: 1} base case is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Prefix sum frequency map with {0: 1} base case ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "day_4_mcq_5",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Subarray Sum Divisible by K using modulo arithmetic",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Subarray Sum Divisible by K using modulo arithmetic: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Subarray Sum Divisible by K using modulo arithmetic\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarray Sum Divisible by K using modulo arithmetic and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarray Sum Divisible by K using modulo arithmetic is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Subarray Sum Divisible by K using modulo arithmetic ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "day_4_mcq_6",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Handling negative numbers in modulo arithmetic",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Handling negative numbers in modulo arithmetic: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Handling negative numbers in modulo arithmetic and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Handling negative numbers in modulo arithmetic is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Handling negative numbers in modulo arithmetic ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 6
+  },
+  {
+    "id": "day_4_mcq_7",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - 2D Matrix prefix sum formula",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining 2D Matrix prefix sum formula: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for 2D Matrix prefix sum formula\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing 2D Matrix prefix sum formula and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if 2D Matrix prefix sum formula is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding 2D Matrix prefix sum formula ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 7
+  },
+  {
+    "id": "day_4_mcq_8",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Contiguous Array with equal 0s and 1s",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Contiguous Array with equal 0s and 1s: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Contiguous Array with equal 0s and 1s and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Contiguous Array with equal 0s and 1s is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Contiguous Array with equal 0s and 1s ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "day_4_mcq_9",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Product of Array Except Self without division",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Product of Array Except Self without division: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Product of Array Except Self without division\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Product of Array Except Self without division and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Product of Array Except Self without division is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Product of Array Except Self without division ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "day_4_mcq_10",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Continuous Subarray Sum multiple of k",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Continuous Subarray Sum multiple of k: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Continuous Subarray Sum multiple of k and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Continuous Subarray Sum multiple of k is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Continuous Subarray Sum multiple of k ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "day_4_mcq_11",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Find Pivot Index where leftSum == rightSum",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Find Pivot Index where leftSum == rightSum: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Find Pivot Index where leftSum == rightSum\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Find Pivot Index where leftSum == rightSum and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Find Pivot Index where leftSum == rightSum is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Find Pivot Index where leftSum == rightSum ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 11
+  },
+  {
+    "id": "day_4_mcq_12",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Subarray Sums Divisible by K",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Subarray Sums Divisible by K: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarray Sums Divisible by K and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarray Sums Divisible by K is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Subarray Sums Divisible by K ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 12
+  },
+  {
+    "id": "day_4_mcq_13",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Range Addition 1D difference array",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Range Addition 1D difference array: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Range Addition 1D difference array\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Range Addition 1D difference array and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Range Addition 1D difference array is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Range Addition 1D difference array ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "day_4_mcq_14",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Range Addition 2D difference array",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Range Addition 2D difference array: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Range Addition 2D difference array and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Range Addition 2D difference array is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Range Addition 2D difference array ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "day_4_mcq_15",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Corporate Flight Bookings range increments",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Corporate Flight Bookings range increments: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Corporate Flight Bookings range increments\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Corporate Flight Bookings range increments and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Corporate Flight Bookings range increments is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Corporate Flight Bookings range increments ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "day_4_mcq_16",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Maximum Sum Circular Subarray using prefix + total",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Maximum Sum Circular Subarray using prefix + total: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Maximum Sum Circular Subarray using prefix + total and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Maximum Sum Circular Subarray using prefix + total is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Maximum Sum Circular Subarray using prefix + total ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 16
+  },
+  {
+    "id": "day_4_mcq_17",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Subarray Sums with target K count",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Subarray Sums with target K count: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Subarray Sums with target K count\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Subarray Sums with target K count and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Subarray Sums with target K count is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Subarray Sums with target K count ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 17
+  },
+  {
+    "id": "day_4_mcq_18",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Car Pooling capacity sweep line",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Car Pooling capacity sweep line: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Car Pooling capacity sweep line and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Car Pooling capacity sweep line is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Car Pooling capacity sweep line ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 18
+  },
+  {
+    "id": "day_4_mcq_19",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Shifting Letters suffix sum accumulation",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Shifting Letters suffix sum accumulation: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Prefix Sums & Difference Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Shifting Letters suffix sum accumulation\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Shifting Letters suffix sum accumulation and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Shifting Letters suffix sum accumulation is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Shifting Letters suffix sum accumulation ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "day_4_mcq_20",
+    "dayId": "day_4",
+    "topic": "Prefix Sums & Difference Arrays - Prefix XOR for query range XOR",
+    "question": "In technical interview algorithmic analysis of Prefix Sums & Difference Arrays, specifically examining Prefix XOR for query range XOR: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Prefix XOR for query range XOR and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Prefix XOR for query range XOR is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Prefix Sums & Difference Arrays, understanding Prefix XOR for query range XOR ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 20
+  },
+  {
+    "id": "day_5_mcq_1",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Avoid integer overflow using low + (high - low)/2",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Avoid integer overflow using low + (high - low)/2: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Avoid integer overflow using low + (high - low)/2\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Avoid integer overflow using low + (high - low)/2 and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Avoid integer overflow using low + (high - low)/2 is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Avoid integer overflow using low + (high - low)/2 ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 1
+  },
+  {
+    "id": "day_5_mcq_2",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Search in Rotated Sorted Array one half sorted guarantee",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Search in Rotated Sorted Array one half sorted guarantee: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Search in Rotated Sorted Array one half sorted guarantee and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Search in Rotated Sorted Array one half sorted guarantee is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Search in Rotated Sorted Array one half sorted guarantee ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 2
+  },
+  {
+    "id": "day_5_mcq_3",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Find Minimum in Rotated Sorted Array",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Find Minimum in Rotated Sorted Array: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Find Minimum in Rotated Sorted Array\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Find Minimum in Rotated Sorted Array and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Find Minimum in Rotated Sorted Array is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Find Minimum in Rotated Sorted Array ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 3
+  },
+  {
+    "id": "day_5_mcq_4",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Lower Bound first element >= target",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Lower Bound first element >= target: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Lower Bound first element >= target and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Lower Bound first element >= target is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Lower Bound first element >= target ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "day_5_mcq_5",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Upper Bound first element > target",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Upper Bound first element > target: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Upper Bound first element > target\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Upper Bound first element > target and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Upper Bound first element > target is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Upper Bound first element > target ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "day_5_mcq_6",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Search Insert Position index mapping",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Search Insert Position index mapping: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Search Insert Position index mapping and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Search Insert Position index mapping is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Search Insert Position index mapping ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 6
+  },
+  {
+    "id": "day_5_mcq_7",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Find Peak Element monotonic gradient ascent",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Find Peak Element monotonic gradient ascent: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Find Peak Element monotonic gradient ascent\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Find Peak Element monotonic gradient ascent and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Find Peak Element monotonic gradient ascent is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Find Peak Element monotonic gradient ascent ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "easy",
+    "orderIndex": 7
+  },
+  {
+    "id": "day_5_mcq_8",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Peak Index in a Mountain Array",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Peak Index in a Mountain Array: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Peak Index in a Mountain Array and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Peak Index in a Mountain Array is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Peak Index in a Mountain Array ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "day_5_mcq_9",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Single Element in a Sorted Array XOR parity",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Single Element in a Sorted Array XOR parity: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Single Element in a Sorted Array XOR parity\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Single Element in a Sorted Array XOR parity and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Single Element in a Sorted Array XOR parity is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Single Element in a Sorted Array XOR parity ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "day_5_mcq_10",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Search a 2D Matrix treating as flattened 1D array",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Search a 2D Matrix treating as flattened 1D array: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Search a 2D Matrix treating as flattened 1D array and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Search a 2D Matrix treating as flattened 1D array is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Search a 2D Matrix treating as flattened 1D array ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "day_5_mcq_11",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Search a 2D Matrix II starting from top-right corner",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Search a 2D Matrix II starting from top-right corner: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Search a 2D Matrix II starting from top-right corner\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Search a 2D Matrix II starting from top-right corner and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Search a 2D Matrix II starting from top-right corner is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Search a 2D Matrix II starting from top-right corner ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 11
+  },
+  {
+    "id": "day_5_mcq_12",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - First Bad Version API minimization",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining First Bad Version API minimization: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing First Bad Version API minimization and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if First Bad Version API minimization is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding First Bad Version API minimization ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 12
+  },
+  {
+    "id": "day_5_mcq_13",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - H-Index II binary search on sorted citations",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining H-Index II binary search on sorted citations: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for H-Index II binary search on sorted citations\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing H-Index II binary search on sorted citations and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if H-Index II binary search on sorted citations is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding H-Index II binary search on sorted citations ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "day_5_mcq_14",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Square root using integer binary search",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Square root using integer binary search: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Square root using integer binary search and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Square root using integer binary search is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Square root using integer binary search ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "day_5_mcq_15",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Valid Perfect Square without sqrt()",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Valid Perfect Square without sqrt(): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Valid Perfect Square without sqrt()\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Valid Perfect Square without sqrt() and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Valid Perfect Square without sqrt() is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Valid Perfect Square without sqrt() ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "day_5_mcq_16",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Median of Two Sorted Arrays logarithmic partition",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Median of Two Sorted Arrays logarithmic partition: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Median of Two Sorted Arrays logarithmic partition and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Median of Two Sorted Arrays logarithmic partition is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Median of Two Sorted Arrays logarithmic partition ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 16
+  },
+  {
+    "id": "day_5_mcq_17",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Find K Closest Elements two pointers vs binary search",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Find K Closest Elements two pointers vs binary search: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Find K Closest Elements two pointers vs binary search\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Find K Closest Elements two pointers vs binary search and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Find K Closest Elements two pointers vs binary search is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Find K Closest Elements two pointers vs binary search ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 17
+  },
+  {
+    "id": "day_5_mcq_18",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Count of Smaller Numbers After Self",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Count of Smaller Numbers After Self: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Count of Smaller Numbers After Self and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Count of Smaller Numbers After Self is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Count of Smaller Numbers After Self ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 18
+  },
+  {
+    "id": "day_5_mcq_19",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Binary search termination condition (low <= high vs low < high)",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Binary search termination condition (low <= high vs low < high): What is the primary invariant or complexity trade-off?",
+    "codeSnippet": "// Core Binary Search on Arrays algorithmic template\nint solve() {\n  // Implementation nuance for Binary search termination condition (low <= high vs low < high)\n  return 0;\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Binary search termination condition (low <= high vs low < high) and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Binary search termination condition (low <= high vs low < high) is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Binary search termination condition (low <= high vs low < high) ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "day_5_mcq_20",
+    "dayId": "day_5",
+    "topic": "Binary Search on Arrays - Off-by-one errors when updating low = mid + 1 vs high = mid - 1",
+    "question": "In technical interview algorithmic analysis of Binary Search on Arrays, specifically examining Off-by-one errors when updating low = mid + 1 vs high = mid - 1: What is the primary invariant or complexity trade-off?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Optimizes time to O(N) by enforcing Off-by-one errors when updating low = mid + 1 vs high = mid - 1 and utilizing linear invariants."
+      },
+      {
+        "key": "B",
+        "text": "Requires O(N^2) worst case if Off-by-one errors when updating low = mid + 1 vs high = mid - 1 is not strictly maintained."
+      },
+      {
+        "key": "C",
+        "text": "Uses O(1) auxiliary space while guaranteeing deterministic order."
+      },
+      {
+        "key": "D",
+        "text": "Cannot be solved without exponential backtracking."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In Binary Search on Arrays, understanding Off-by-one errors when updating low = mid + 1 vs high = mid - 1 ensures optimal runtime. By maintaining the underlying data structure invariant, the algorithm processes each element in amortized constant time, eliminating nested redundant scans. Crucial for technical interviews to avoid degrading to Option B (O(N^2) worst case).",
+    "difficulty": "hard",
+    "orderIndex": 20
+  }
+]
