@@ -60,3 +60,7 @@
 - **Message**: `feat(mcq): add distributed systems scale and latency drill questions`
 - **Timestamp**: `2026-09-22T20:05:30+05:30`
 
+### [2026-09-23 10:14:22] Commit #16
+- **Message**: `feat(curriculum): compile Day 6-8 sliding window and hash table problems`
+- **Timestamp**: `2026-09-23T10:14:22+05:30`
+
