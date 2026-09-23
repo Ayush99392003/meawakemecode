@@ -64,3 +64,7 @@
 - **Message**: `feat(curriculum): compile Day 6-8 sliding window and hash table problems`
 - **Timestamp**: `2026-09-23T10:14:22+05:30`
 
+### [2026-09-23 15:28:45] Commit #17
+- **Message**: `feat(cs-funda): add process lifecycle, PCB, and context switching notes`
+- **Timestamp**: `2026-09-23T15:28:45+05:30`
+
