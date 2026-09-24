@@ -76,3 +76,7 @@
 - **Message**: `feat(curriculum): compile Day 9-10 monotonic stack and queue challenges`
 - **Timestamp**: `2026-09-24T10:14:22+05:30`
 
+### [2026-09-24 15:28:45] Commit #20
+- **Message**: `feat(cs-funda): document CPU scheduling algorithms CFS and round robin`
+- **Timestamp**: `2026-09-24T15:28:45+05:30`
+
