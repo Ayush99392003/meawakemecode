@@ -88,3 +88,7 @@
 - **Message**: `feat(system-design): design URL shortener high-level architecture`
 - **Timestamp**: `2026-09-25T10:14:22+05:30`
 
+### [2026-09-25 15:28:45] Commit #23
+- **Message**: `feat(system-design): calculate QPS, storage, and cache memory budgets`
+- **Timestamp**: `2026-09-25T15:28:45+05:30`
+
