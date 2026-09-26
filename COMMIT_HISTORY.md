@@ -96,3 +96,7 @@
 - **Message**: `docs(system-design): document base62 encoding vs md5 hash collision handling`
 - **Timestamp**: `2026-09-25T20:05:30+05:30`
 
+### [2026-09-26 10:14:22] Commit #25
+- **Message**: `feat(curriculum): compile Day 11-13 binary search on answer patterns`
+- **Timestamp**: `2026-09-26T10:14:22+05:30`
+
