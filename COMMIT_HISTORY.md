@@ -100,3 +100,7 @@
 - **Message**: `feat(curriculum): compile Day 11-13 binary search on answer patterns`
 - **Timestamp**: `2026-09-26T10:14:22+05:30`
 
+### [2026-09-26 15:28:45] Commit #26
+- **Message**: `feat(cs-funda): add concurrency primitives, mutex locks, and semaphores`
+- **Timestamp**: `2026-09-26T15:28:45+05:30`
+
