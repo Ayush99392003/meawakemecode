@@ -112,3 +112,7 @@
 - **Message**: `feat(curriculum): compile Day 14-15 linked list reversal and cycle detection`
 - **Timestamp**: `2026-09-27T10:14:22+05:30`
 
+### [2026-09-27 15:28:45] Commit #29
+- **Message**: `feat(cs-funda): document deadlock conditions and banker's algorithm`
+- **Timestamp**: `2026-09-27T15:28:45+05:30`
+
