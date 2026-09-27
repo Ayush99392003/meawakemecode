@@ -116,3 +116,7 @@
 - **Message**: `feat(cs-funda): document deadlock conditions and banker's algorithm`
 - **Timestamp**: `2026-09-27T15:28:45+05:30`
 
+### [2026-09-27 20:05:30] Commit #30
+- **Message**: `feat(mcq): draft concurrency and synchronization questions`
+- **Timestamp**: `2026-09-27T20:05:30+05:30`
+
