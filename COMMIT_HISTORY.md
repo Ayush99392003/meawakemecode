@@ -108,3 +108,7 @@
 - **Message**: `test(concurrency): add edge cases for reader-writer problem and dining philosophers`
 - **Timestamp**: `2026-09-26T20:05:30+05:30`
 
+### [2026-09-27 10:14:22] Commit #28
+- **Message**: `feat(curriculum): compile Day 14-15 linked list reversal and cycle detection`
+- **Timestamp**: `2026-09-27T10:14:22+05:30`
+
