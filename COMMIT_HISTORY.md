@@ -120,3 +120,7 @@
 - **Message**: `feat(mcq): draft concurrency and synchronization questions`
 - **Timestamp**: `2026-09-27T20:05:30+05:30`
 
+### [2026-09-28 10:14:22] Commit #31
+- **Message**: `feat(system-design): design distributed rate limiter with token bucket algorithm`
+- **Timestamp**: `2026-09-28T10:14:22+05:30`
+
