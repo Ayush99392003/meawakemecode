@@ -124,3 +124,7 @@
 - **Message**: `feat(system-design): design distributed rate limiter with token bucket algorithm`
 - **Timestamp**: `2026-09-28T10:14:22+05:30`
 
+### [2026-09-28 15:28:45] Commit #32
+- **Message**: `feat(system-design): compare sliding window log vs leaky bucket rate limiting`
+- **Timestamp**: `2026-09-28T15:28:45+05:30`
+
