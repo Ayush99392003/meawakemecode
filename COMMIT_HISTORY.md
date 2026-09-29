@@ -136,3 +136,7 @@
 - **Message**: `feat(curriculum): compile Day 16-18 tree traversals, LCA, and subtree invariants`
 - **Timestamp**: `2026-09-29T10:14:22+05:30`
 
+### [2026-09-29 15:28:45] Commit #35
+- **Message**: `feat(cs-funda): add computer networks TCP 3-way handshake and connection teardown`
+- **Timestamp**: `2026-09-29T15:28:45+05:30`
+
