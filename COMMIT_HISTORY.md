@@ -132,3 +132,7 @@
 - **Message**: `feat(mcq): add rate limiter scale and distributed redis synchronization drills`
 - **Timestamp**: `2026-09-28T20:05:30+05:30`
 
+### [2026-09-29 10:14:22] Commit #34
+- **Message**: `feat(curriculum): compile Day 16-18 tree traversals, LCA, and subtree invariants`
+- **Timestamp**: `2026-09-29T10:14:22+05:30`
+
