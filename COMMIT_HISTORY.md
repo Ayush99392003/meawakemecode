@@ -140,3 +140,7 @@
 - **Message**: `feat(cs-funda): add computer networks TCP 3-way handshake and connection teardown`
 - **Timestamp**: `2026-09-29T15:28:45+05:30`
 
+### [2026-09-29 20:05:30] Commit #36
+- **Message**: `docs(networks): diagram SYN, SYN-ACK, ACK and TIME_WAIT socket states`
+- **Timestamp**: `2026-09-29T20:05:30+05:30`
+
