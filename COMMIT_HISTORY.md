@@ -148,3 +148,7 @@
 - **Message**: `feat(curriculum): compile Day 19-20 binary search tree validations and balancing`
 - **Timestamp**: `2026-09-30T10:14:22+05:30`
 
+### [2026-09-30 15:28:45] Commit #38
+- **Message**: `feat(cs-funda): document TCP congestion control Tahoe, Reno, and BBR algorithms`
+- **Timestamp**: `2026-09-30T15:28:45+05:30`
+
