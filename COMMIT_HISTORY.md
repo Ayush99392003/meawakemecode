@@ -164,3 +164,7 @@
 - **Message**: `feat(system-design): implement virtual nodes to prevent cache hotspotting`
 - **Timestamp**: `2026-10-01T15:28:45+05:30`
 
+### [2026-10-01 20:05:30] Commit #42
+- **Message**: `docs(system-design): evaluate cache-aside vs read-through and write-behind patterns`
+- **Timestamp**: `2026-10-01T20:05:30+05:30`
+
