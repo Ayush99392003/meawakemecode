@@ -172,3 +172,7 @@
 - **Message**: `feat(curriculum): compile Day 21-23 graph BFS, DFS, and topological sorting`
 - **Timestamp**: `2026-10-02T10:14:22+05:30`
 
+### [2026-10-02 15:28:45] Commit #44
+- **Message**: `feat(cs-funda): add OSI model layer breakdown and IP routing CIDR subnets`
+- **Timestamp**: `2026-10-02T15:28:45+05:30`
+
