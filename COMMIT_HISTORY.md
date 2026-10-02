@@ -168,3 +168,7 @@
 - **Message**: `docs(system-design): evaluate cache-aside vs read-through and write-behind patterns`
 - **Timestamp**: `2026-10-01T20:05:30+05:30`
 
+### [2026-10-02 10:14:22] Commit #43
+- **Message**: `feat(curriculum): compile Day 21-23 graph BFS, DFS, and topological sorting`
+- **Timestamp**: `2026-10-02T10:14:22+05:30`
+
