@@ -184,3 +184,7 @@
 - **Message**: `feat(curriculum): compile Day 24-25 shortest path Dijkstra and Bellman-Ford sets`
 - **Timestamp**: `2026-10-03T10:14:22+05:30`
 
+### [2026-10-03 15:28:45] Commit #47
+- **Message**: `feat(cs-funda): document DNS resolution flow, authoritative servers, and DNS caching`
+- **Timestamp**: `2026-10-03T15:28:45+05:30`
+
