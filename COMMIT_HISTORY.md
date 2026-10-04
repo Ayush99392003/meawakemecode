@@ -196,3 +196,7 @@
 - **Message**: `feat(system-design): design distributed messaging queue like Apache Kafka`
 - **Timestamp**: `2026-10-04T10:14:22+05:30`
 
+### [2026-10-04 15:28:45] Commit #50
+- **Message**: `feat(system-design): document partition consumer offset management and consumer groups`
+- **Timestamp**: `2026-10-04T15:28:45+05:30`
+
