@@ -204,3 +204,7 @@
 - **Message**: `feat(mcq): draft message ordering and at-least-once delivery questions`
 - **Timestamp**: `2026-10-04T20:05:30+05:30`
 
+### [2026-10-05 10:14:22] Commit #52
+- **Message**: `feat(curriculum): compile Day 26-27 union find and minimum spanning tree Kruskal`
+- **Timestamp**: `2026-10-05T10:14:22+05:30`
+
