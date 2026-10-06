@@ -220,3 +220,7 @@
 - **Message**: `feat(curriculum): compile Day 28-29 1D and 2D dynamic programming foundations`
 - **Timestamp**: `2026-10-06T10:14:22+05:30`
 
+### [2026-10-06 15:28:45] Commit #56
+- **Message**: `feat(cs-funda): add relational DBMS storage engines, B+ Trees vs LSM Trees`
+- **Timestamp**: `2026-10-06T15:28:45+05:30`
+
