@@ -236,3 +236,7 @@
 - **Message**: `feat(cs-funda): document ACID transaction guarantees and write-ahead logging (WAL)`
 - **Timestamp**: `2026-10-07T15:28:45+05:30`
 
+### [2026-10-07 20:05:30] Commit #60
+- **Message**: `docs(dbms): compare isolation levels read committed vs repeatable read vs serializable`
+- **Timestamp**: `2026-10-07T20:05:30+05:30`
+
