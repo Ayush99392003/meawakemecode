@@ -240,3 +240,7 @@
 - **Message**: `docs(dbms): compare isolation levels read committed vs repeatable read vs serializable`
 - **Timestamp**: `2026-10-07T20:05:30+05:30`
 
+### [2026-10-08 10:14:22] Commit #61
+- **Message**: `feat(system-design): design relational database sharding and replication topology`
+- **Timestamp**: `2026-10-08T10:14:22+05:30`
+
