@@ -1,0 +1,542 @@
+[
+  {
+    "dayNumber": 1,
+    "dsaTheme": "Arrays & Hash Maps",
+    "title": "System Design Foundations: Latency, Throughput & CAP/PACELC",
+    "summary": "Foundational distributed systems principles: latency numbers every engineer should know, throughput bottlenecks, CAP theorem, and PACELC in real-world high availability.",
+    "architecture": "### Latency Numbers Every Distributed Systems Engineer Must Know\n\n| Operation | Latency | Real-World Equivalent Scale |\n| :--- | :--- | :--- |\n| L1 Cache Reference | $0.5\\text{ ns}$ | 1 heartbeat |\n| Branch Mispredict | $5\\text{ ns}$ | 10 heartbeats |\n| L2 Cache Reference | $7\\text{ ns}$ | 14 heartbeats |\n| Mutex Lock / Unlock | $25\\text{ ns}$ | 50 heartbeats |\n| Main Memory (RAM) Access | $100\\text{ ns}$ | 3.3 minutes |\n| Read 1 MB sequentially from Memory | $3,000\\text{ ns}$ ($3\\;\\mu\\text{s}$) | 1.5 hours |\n| NVMe SSD Random Read | $10,000\\text{ ns}$ ($10\\;\\mu\\text{s}$) | 5 hours |\n| SSD 1 MB Sequential Read | $50,000\\text{ ns}$ ($50\\;\\mu\\text{s}$) | 1.1 days |\n| Round trip within same datacenter | $500,000\\text{ ns}$ ($0.5\\text{ ms}$) | 11.5 days |\n| Read 1 MB sequentially from SSD | $1,000,000\\text{ ns}$ ($1\\text{ ms}$) | 23 days |\n| Disk Seek (HDD) | $10,000,000\\text{ ns}$ ($10\\text{ ms}$) | 7.6 months |\n| Send packet CA $\\rightarrow$ Netherlands $\\rightarrow$ CA | $150,000,000\\text{ ns}$ ($150\\text{ ms}$) | 9.5 years |\n\n### CAP vs PACELC Theorem\nThe traditional CAP theorem states that under network partitions ($P$), a distributed system must choose between Consistency ($C$) and Availability ($A$).\n\n**PACELC extends this to normal operations**:\n- **If Partition ($P$)**: Choose between Availability ($A$) and Consistency ($C$).\n- **Else ($E$)**: Choose between Latency ($L$) and Consistency ($C$).\n\nExamples:\n- **MongoDB / DynamoDB**: PA/EL (Partition $\\rightarrow$ Availability, Else $\\rightarrow$ Latency)\n- **Google Spanner / CockroachDB**: PC/EC (Partition $\\rightarrow$ Consistency, Else $\\rightarrow$ Consistency via TrueTime/Paxos)",
+    "tradeoffs": "Prioritizing strong linearizability requires cross-datacenter quorum round-trips ($>100\\text{ ms}$ latency), whereas choosing eventual consistency allows single-datacenter local reads ($<2\\text{ ms}$ latency) with the risk of stale reads.",
+    "interviewQuestions": [
+      {
+        "q": "Why does the CAP theorem apply strictly only when a network partition actually occurs?",
+        "a": "In steady state without network partitions, both consistency and availability can be satisfied simultaneously. The tradeoff during normal operation is between Latency and Consistency (as formalized by Abadi's PACELC theorem)."
+      },
+      {
+        "q": "What is the operational difference between p95, p99, and p99.9 latency in SLA monitoring?",
+        "a": "While p50 represents the typical user experience, p99.9 represents the slowest 1 in 1,000 requests. In modern microservice fan-out architectures where one client request triggers 100 internal RPCs, a high p99 latency directly degrades 63% of all end-user requests."
+      }
+    ]
+  },
+  {
+    "dayNumber": 2,
+    "dsaTheme": "Two Pointers",
+    "title": "Design a Scalable URL Shortener (TinyURL)",
+    "summary": "Architecture for 100M new URLs/month and 1B reads/day: Base62 encoding vs MD5 hash truncation, Key Generation Service (KGS), and Redis caching.",
+    "architecture": "### System Scale & Estimation\n- **Writes**: 100M URLs / month $\\approx 40\\text{ URLs/second}$ (Peak $\\approx 200\\text{ writes/s}$).\n- **Reads**: 1B URLs / month $\\approx 400\\text{ reads/second}$ (Peak $\\approx 2,000\\text{ reads/s}$).\n- **Read-to-Write Ratio**: 10:1 (Read heavy).\n- **Storage for 5 Years**: $100\\text{M} \\times 12 \\times 5 = 6\\text{ Billion URLs}$. At 500 bytes per record $\\approx 3\\text{ TB}$.\n\n### Key Generation Service (KGS) Architecture\nInstead of computing hashes at runtime (which causes hash collisions and requires DB lookups to resolve):\n1. An offline **Key Generation Service (KGS)** pre-generates 7-character unique alphanumeric strings using Base62 characters (`[a-zA-Z0-9]`).\n2. $62^7 \\approx 3.52\\text{ Trillion}$ combinations, plenty for 6 billion URLs.\n3. KGS stores pre-generated keys in two tables: `unused_keys` and `used_keys`.\n4. When a new short URL request arrives, the API Gateway pops an unused key from an in-memory buffer, eliminating locking and collision detection.\n\n### Read Path Optimization\n1. User requests `GET https://short.link/xyz789`.\n2. ALB routes to Application Server.\n3. Check **Redis Cache** (holds 20% of hot URLs via LRU eviction policy).\n4. If Cache Hit: Return `302 Found` (or `301 Moved Permanently`) with `Location: original_url`.\n5. If Cache Miss: Query PostgreSQL / Cassandra, populate Redis, and return redirect.",
+    "tradeoffs": "Returning HTTP 301 caches the redirect in the user browser (saving server bandwidth on future clicks), but HTTP 302 forces requests to hit the server, allowing precise real-time analytics and click tracking.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Base62 encoding preferred over Base64 for URL shorteners?",
+        "a": "Base64 includes characters \"+\" and \"/\" which have reserved meanings in URL query strings and path segments, requiring URL-escaping (%2B, %2F). Base62 uses only alphanumeric characters [0-9a-zA-Z], which are safe across all HTTP clients and browsers."
+      },
+      {
+        "q": "How do you prevent single points of failure in the Key Generation Service?",
+        "a": "KGS runs in active-standby instances with pre-assigned key ranges (e.g. Server 1 dispenses keys with IDs ending in 0-4, Server 2 dispenses 5-9) or uses ZooKeeper/Raft to lease token ranges to workers."
+      }
+    ]
+  },
+  {
+    "dayNumber": 3,
+    "dsaTheme": "Sliding Window",
+    "title": "Design a Distributed Rate Limiter",
+    "summary": "Architecture for high-throughput API rate limiting: Token Bucket, Leaky Bucket, Sliding Window Log vs Sliding Window Counter, and Redis Lua scripts.",
+    "architecture": "### Rate Limiting Algorithms Comparison\n\n1. **Token Bucket**: Tokens added at constant rate $R$. Bursts allowed up to bucket capacity $B$. Simple memory footprint (2 numbers: tokens, lastTimestamp).\n2. **Leaky Bucket**: Requests enter queue and leak out at constant rate. Smooths out traffic, but drops requests during spikes.\n3. **Sliding Window Log**: Stores timestamps in Redis Sorted Set (ZSET). Accurately calculates count within $[now - window, now]$. High memory consumption.\n4. **Sliding Window Counter**: Combines counters from current and previous windows:\n   $$Count = Count_{current} + Count_{prev} \\times \\left(1 - \\frac{elapsed}{window}\\right)$$\n   Extremely memory efficient (stores only 2 integers) and gives 99.9% accuracy.\n\n### Distributed Redis Architecture\n- Use **Redis Cluster** partitioned by `user_id` or `ip_address`.\n- Execute rate check atomically using an embedded **Lua script** to prevent Race Conditions (read-modify-write hazard):\n```lua\nlocal key = KEYS[1]\nlocal limit = tonumber(ARGV[1])\nlocal current = redis.call('GET', key)\nif current and tonumber(current) >= limit then\n    return 0\nelse\n    redis.call('INCR', key)\n    if not current then redis.call('EXPIRE', key, 60) end\n    return 1\nend\n```",
+    "tradeoffs": "Centralized Redis provides exact global limit enforcement across all app nodes, but adds a 1ms network hop per request. Local in-memory rate limiting has 0ms network latency, but allows $N \\times limit$ requests across $N$ servers.",
+    "interviewQuestions": [
+      {
+        "q": "How do you handle rate limiter failure in a mission-critical payment API?",
+        "a": "Implement a fail-open circuit breaker. If the Redis rate limiter cluster becomes unreachable or times out (>10ms), the API Gateway logs an alert and allows legitimate traffic through rather than causing total service outage."
+      },
+      {
+        "q": "What HTTP response headers should a rate limiter return?",
+        "a": "X-RateLimit-Limit (max requests allowed in period), X-RateLimit-Remaining (remaining count), and X-RateLimit-Reset (Unix epoch timestamp when window resets), returning HTTP status 429 Too Many Requests."
+      }
+    ]
+  },
+  {
+    "dayNumber": 4,
+    "dsaTheme": "Prefix Sums & Difference Arrays",
+    "title": "Design a Scalable Web Crawler",
+    "summary": "Architecture for scraping 1B web pages/month: URL Frontier, politeness policies, MurmurHash deduplication, and Bloom filters.",
+    "architecture": "### High-Level Architecture\n1. **URL Frontier**: Manages queued URLs with priority queues and politeness delay per domain.\n2. **DNS Resolver Cache**: Local DNS cache to avoid resolving domain names on every fetch.\n3. **HTML Fetcher**: Asynchronous HTTP client (e.g. Go goroutines / epoll) respecting `robots.txt`.\n4. **Content Deduplication**: Compute 64-bit SimHash of rendered DOM; query Bloom filter to skip identical pages.\n5. **URL Extractor**: Parses internal links, canonicalizes relative paths, and adds new links to frontier.",
+    "tradeoffs": "Politeness vs Crawl Throughput: Strict per-host rate limits (e.g. max 1 request/sec per host) protect target web servers from DDoS, but require sharding the crawler across millions of distinct domains to maintain high aggregate throughput.",
+    "interviewQuestions": [
+      {
+        "q": "How do you detect duplicate web pages efficiently at scale?",
+        "a": "Compute a fingerprint of document content using SimHash or MurmurHash. Check against a distributed Bloom Filter or Redis Bitfield before storing the document in S3."
+      },
+      {
+        "q": "How does the URL Frontier maintain host politeness?",
+        "a": "Use a two-tier queue design: Priority Queues sort URLs by importance, while FIFO Politeness Queues enforce that requests to the same host IP have a minimum elapsed delay."
+      }
+    ]
+  },
+  {
+    "dayNumber": 5,
+    "dsaTheme": "Binary Search on Arrays",
+    "title": "Design a Notification Service at Scale",
+    "summary": "Architecture for 10M notifications/minute: Push, SMS, Email fanout, Kafka partitioning, and idempotent delivery.",
+    "architecture": "### Notification System Flow\n1. **API Gateway**: Validates payload and enqueues notification request.\n2. **Notification Service**: Validates user notification preferences (DND hours, opt-outs).\n3. **Message Queue (Kafka)**: Partitioned by `user_id` to guarantee in-order delivery.\n4. **Workers**: Worker pools interface with third-party providers (APNs for iOS, FCM for Android, Twilio for SMS, SendGrid for Email).\n5. **Dead-Letter Queue (DLQ)**: Failed deliveries after exponential backoff retries are enqueued for manual inspection.",
+    "tradeoffs": "At-least-once delivery with idempotency keys is preferred over exactly-once delivery, because exactly-once across external third-party push gateways (Apple APNs) is physically impossible without two-phase commit.",
+    "interviewQuestions": [
+      {
+        "q": "How do you guarantee idempotency in mobile push notifications?",
+        "a": "Assign each event a unique `event_id`. Workers check Redis `SETNX idempotency:event_id 1` with a 24-hour TTL before sending the push payload."
+      },
+      {
+        "q": "How do you prevent third-party provider outages from bringing down the notification platform?",
+        "a": "Use circuit breakers (Resilience4j) and fallback providers (e.g. switch to AWS SNS if Twilio error rate exceeds 5%)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 6,
+    "dsaTheme": "Binary Search on Answer Space",
+    "title": "Design a Distributed Key-Value Store",
+    "summary": "Architecture modeled after DynamoDB and Cassandra: Consistent Hashing, Vector Clocks, Quorum consensus (W+R>N), and Gossip protocol.",
+    "architecture": "### Core Components\n1. **Consistent Hash Ring**: Nodes mapped along a 360-degree virtual ring using MD5/MurmurHash. Virtual nodes ensure uniform key distribution across physical servers.\n2. **Replication Factor ($N$)**: Key stored on the coordinator node and the next $N-1$ clockwise successor nodes.\n3. **Tunable Quorum**: For strong consistency, configure $R + W > N$ (e.g. $N=3, R=2, W=2$).\n4. **Anti-Entropy**: Merkle trees compare replicas asynchronously to detect out-of-sync key ranges without transmitting full data over the network.",
+    "tradeoffs": "Choosing $W=1, R=1$ maximizes throughput and minimizes latency, but sacrifices read consistency (allowing dirty/stale reads) until background anti-entropy repairs the replicas.",
+    "interviewQuestions": [
+      {
+        "q": "Why are Virtual Nodes essential in Consistent Hashing?",
+        "a": "Without virtual nodes, adding or removing a physical server can lead to non-uniform key distribution (hot spots). Virtual nodes (e.g. 256 per physical server) evenly distribute load across all available hardware."
+      },
+      {
+        "q": "What is the purpose of the Gossip Protocol in Dynamo-style stores?",
+        "a": "It is a decentralized failure-detection protocol where nodes exchange peer membership and heartbeat state every second, reaching consensus on cluster health without a central master."
+      }
+    ]
+  },
+  {
+    "dayNumber": 7,
+    "dsaTheme": "Bit Manipulation & Fast Math",
+    "title": "Design a Distributed Unique ID Generator",
+    "summary": "Generating 64-bit globally unique, roughly time-sorted IDs at 100,000 IDs/second: Twitter Snowflake architecture and clock drift mitigation.",
+    "architecture": "### Snowflake 64-bit ID Layout\n- **1 bit**: Unused sign bit (always 0).\n- **41 bits**: Timestamp in milliseconds since custom epoch ($2^{41} \\approx 69\\text{ years}$).\n- **10 bits**: Machine ID / Worker ID ($2^{10} = 1,024\\text{ worker nodes}$).\n- **12 bits**: Sequence number per worker ($2^{12} = 4,096\\text{ IDs/ms per worker node}$).\n- **Capacity**: $1,024 \\times 4,096 = 4.19\\text{ Million unique IDs/second}$.\n\n### Clock Drift & NTP Jumps\nIf the server's local clock synchronizes backwards via NTP:\n1. Detect condition: If `currentTimestamp < lastTimestamp`, refuse to generate IDs.\n2. Sleep until clock catches up or throw an exception to fail over to a healthy standby node.",
+    "tradeoffs": "UUIDv4 provides decentralized generation without worker coordination, but its 128-bit random size causes severe B+ Tree index fragmentation in relational databases compared to time-ordered 64-bit Snowflake IDs.",
+    "interviewQuestions": [
+      {
+        "q": "Why are 64-bit time-ordered IDs preferred over UUIDv4 for database primary keys?",
+        "a": "UUIDv4 values are completely random, causing inserts into clustered B+ Tree indexes to require random disk page writes and constant page splits. Time-ordered Snowflake IDs append sequentially to the rightmost leaf page."
+      },
+      {
+        "q": "How does Snowflake resolve sequence number overflow in the same millisecond?",
+        "a": "If a worker receives more than 4,096 requests within a single millisecond, it busy-spins until the next millisecond before issuing the next ID."
+      }
+    ]
+  },
+  {
+    "dayNumber": 8,
+    "dsaTheme": "Stacks & Monotonic Stack",
+    "title": "Design Pastebin / Text Storage System",
+    "summary": "Architecture for 10M pastes/day: Object Storage (S3), Metadata DB in PostgreSQL/DynamoDB, Pre-signed URLs, and TTL-based background purge.",
+    "architecture": "### Architecture Flow\n1. **Write Request**: Client uploads text paste $\\rightarrow$ API Gateway generates unique 8-character ID.\n2. **Blob Storage**: Text content stored in Amazon S3 / Google Cloud Storage partitioned by `hash_prefix/id`.\n3. **Metadata Storage**: Save metadata (size, author, expiryTimestamp, S3URL) in DynamoDB.\n4. **Read Path**: Fetch from Redis Cache first; on miss, fetch from S3 and write through to Redis.\n5. **Purge Cron**: DynamoDB TTL feature automatically deletes expired metadata records; S3 Lifecycle Policies expire objects after $N$ days.",
+    "tradeoffs": "Storing raw text in relational database BLOB columns creates massive database table bloat and slows down index scans. Separating metadata (DB) from text blobs (S3) achieves infinite linear scalability.",
+    "interviewQuestions": [
+      {
+        "q": "How do you handle expired pastes without overloading the primary database with DELETE queries?",
+        "a": "Use lazy deletion (check expiry timestamp on read) combined with storage lifecycle rules or database TTL features that handle background purging asynchronously."
+      },
+      {
+        "q": "How do you prevent malicious users from uploading spam or malware to Pastebin?",
+        "a": "Run an asynchronous worker pipeline that consumes newly created paste IDs from Kafka, scans content via machine-learning moderation APIs, and flags or deletes violating records."
+      }
+    ]
+  },
+  {
+    "dayNumber": 9,
+    "dsaTheme": "Queues & Monotonic Deque",
+    "title": "Design a Distributed Message Queue (Apache Kafka)",
+    "summary": "Architecture of high-throughput log-based message queues: Topics, Partitions, Consumer Groups, Zero-Copy (sendfile), and ISR replication.",
+    "architecture": "### Kafka Architecture Fundamentals\n1. **Topic & Partitions**: A topic is sharded into append-only partitions distributed across brokers. Partitions enable horizontal parallelism.\n2. **Zero-Copy Architecture**: Kafka uses Linux `sendfile()` system call to transfer byte buffers directly from the OS page cache to the network socket descriptor, bypassing user-space copying.\n3. **Consumer Groups**: Multiple consumers share a group ID; each partition is consumed by exactly one consumer within the group.\n4. **In-Sync Replicas (ISR)**: The leader replica only acknowledges a message after all replicas in the ISR have written it to their local append-only log.",
+    "tradeoffs": "Kafka guarantees total ordering only within a single partition, not across multiple partitions. To achieve global ordering, a topic must use a single partition, limiting throughput to a single machine.",
+    "interviewQuestions": [
+      {
+        "q": "How does Kafka achieve millions of messages per second on standard commodity hardware?",
+        "a": "Through sequential disk I/O (which rivals random memory access speed), heavy reliance on the OS Page Cache, batching messages, and zero-copy data transfer via Linux sendfile()."
+      },
+      {
+        "q": "What is the difference between at-least-once, at-most-once, and exactly-once processing in Kafka?",
+        "a": "At-most-once commits offsets before processing; at-least-once commits offsets after successful processing (retries may cause duplicates); exactly-once uses Kafka transactional APIs to coordinate writes to both destination topics and consumer offsets atomically."
+      }
+    ]
+  },
+  {
+    "dayNumber": 10,
+    "dsaTheme": "Linked List Patterns",
+    "title": "Design a Real-Time Chat System (WhatsApp / Slack)",
+    "summary": "Architecture for 100M daily active users: WebSocket Gateway, Redis Pub/Sub, Cassandra message store, and user presence heartbeat engine.",
+    "architecture": "### Real-Time Chat Architecture\n1. **WebSocket Gateway**: Maintains persistent, bidirectional TCP connections with active mobile/web clients.\n2. **Session Service**: Maps `user_id \\rightarrow gateway_server_id` in Redis.\n3. **Chat Service**: Handles message routing. When Alice messages Bob:\n   - Queries Session Service for Bob's active gateway node.\n   - If online: Routes message via internal Redis Pub/Sub or gRPC to Bob's gateway.\n   - If offline: Sends push notification via APNs/FCM and marks as unread.\n4. **Message Store (Apache Cassandra)**: High-write throughput NoSQL with partition key `chat_id` and clustering key `timestamp DESC`.",
+    "tradeoffs": "WebSocket connections require stateful servers, making horizontal auto-scaling and zero-downtime rolling deploys complex due to the need for client reconnection logic and connection draining.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Apache Cassandra preferred over PostgreSQL for chat message storage?",
+        "a": "Cassandra offers linear horizontal write scaling, append-optimized LSM-tree storage, and native partition key clustering that allows fetching the latest 50 messages of a conversation in a single contiguous disk read."
+      },
+      {
+        "q": "How do you design a reliable User Presence (Online/Offline) system at scale?",
+        "a": "Clients send a heartbeat ping every 5 seconds over the WebSocket. The server updates a key in Redis with a 15-second TTL. If no heartbeat arrives, the key expires, marking the user offline."
+      }
+    ]
+  },
+  {
+    "dayNumber": 11,
+    "dsaTheme": "Recursion & Backtracking",
+    "title": "Design a Video Streaming Platform (YouTube/Netflix)",
+    "summary": "Production system architecture for Design a Video Streaming Platform (YouTube/Netflix): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Video Streaming Platform (YouTube/Netflix)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Video Streaming Platform (YouTube/Netflix) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Video Streaming Platform (YouTube/Netflix)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 12,
+    "dsaTheme": "Binary Trees: DFS & Paths",
+    "title": "Design a Content Delivery Network (CDN)",
+    "summary": "Production system architecture for Design a Content Delivery Network (CDN): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Content Delivery Network (CDN)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Content Delivery Network (CDN) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Content Delivery Network (CDN)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 13,
+    "dsaTheme": "Binary Trees: BFS & Views",
+    "title": "Design a Distributed File System (GFS/HDFS)",
+    "summary": "Production system architecture for Design a Distributed File System (GFS/HDFS): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Distributed File System (GFS/HDFS)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed File System (GFS/HDFS) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed File System (GFS/HDFS)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 14,
+    "dsaTheme": "Binary Search Trees (BST)",
+    "title": "Design a Search Autocomplete System (Trie at Scale)",
+    "summary": "Production system architecture for Design a Search Autocomplete System (Trie at Scale): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Search Autocomplete System (Trie at Scale)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Search Autocomplete System (Trie at Scale) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Search Autocomplete System (Trie at Scale)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 15,
+    "dsaTheme": "Heaps & Priority Queues",
+    "title": "Design a Proximity Service / Nearby Places (Yelp/Google Maps)",
+    "summary": "Production system architecture for Design a Proximity Service / Nearby Places (Yelp/Google Maps): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Proximity Service / Nearby Places (Yelp/Google Maps)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Proximity Service / Nearby Places (Yelp/Google Maps) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Proximity Service / Nearby Places (Yelp/Google Maps)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 16,
+    "dsaTheme": "Greedy Algorithms",
+    "title": "Design a Ride-Sharing Dispatch System (Uber/Lyft)",
+    "summary": "Production system architecture for Design a Ride-Sharing Dispatch System (Uber/Lyft): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Ride-Sharing Dispatch System (Uber/Lyft)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Ride-Sharing Dispatch System (Uber/Lyft) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Ride-Sharing Dispatch System (Uber/Lyft)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 17,
+    "dsaTheme": "Dynamic Programming: 1D Basics",
+    "title": "Design a Social Media News Feed (Twitter/Instagram)",
+    "summary": "Production system architecture for Design a Social Media News Feed (Twitter/Instagram): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Social Media News Feed (Twitter/Instagram)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Social Media News Feed (Twitter/Instagram) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Social Media News Feed (Twitter/Instagram)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 18,
+    "dsaTheme": "Dynamic Programming: State Machine",
+    "title": "Design a Payment Gateway & Double-Entry Ledger",
+    "summary": "Production system architecture for Design a Payment Gateway & Double-Entry Ledger: component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Payment Gateway & Double-Entry Ledger\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Payment Gateway & Double-Entry Ledger at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Payment Gateway & Double-Entry Ledger?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 19,
+    "dsaTheme": "Dynamic Programming: 2D Grids",
+    "title": "Design a Web-Scale Metrics & Monitoring System (Datadog)",
+    "summary": "Production system architecture for Design a Web-Scale Metrics & Monitoring System (Datadog): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Web-Scale Metrics & Monitoring System (Datadog)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Web-Scale Metrics & Monitoring System (Datadog) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Web-Scale Metrics & Monitoring System (Datadog)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 20,
+    "dsaTheme": "Dynamic Programming: Knapsack",
+    "title": "Design a Distributed Web Search Engine & PageRank",
+    "summary": "Production system architecture for Design a Distributed Web Search Engine & PageRank: component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Distributed Web Search Engine & PageRank\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Web Search Engine & PageRank at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Web Search Engine & PageRank?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 21,
+    "dsaTheme": "Dynamic Programming: Strings",
+    "title": "Design a Live Streaming & Interactive Chat System (Twitch)",
+    "summary": "Production system architecture for Design a Live Streaming & Interactive Chat System (Twitch): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Live Streaming & Interactive Chat System (Twitch)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Live Streaming & Interactive Chat System (Twitch) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Live Streaming & Interactive Chat System (Twitch)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 22,
+    "dsaTheme": "Graph Fundamentals: BFS & DFS",
+    "title": "Design a Distributed Job Scheduler (Quartz / Celery)",
+    "summary": "Production system architecture for Design a Distributed Job Scheduler (Quartz / Celery): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Distributed Job Scheduler (Quartz / Celery)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Job Scheduler (Quartz / Celery) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Job Scheduler (Quartz / Celery)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 23,
+    "dsaTheme": "Matrix as Graph",
+    "title": "Design a Real-Time Collaborative Document Editor (Google Docs)",
+    "summary": "Production system architecture for Design a Real-Time Collaborative Document Editor (Google Docs): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Real-Time Collaborative Document Editor (Google Docs)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Real-Time Collaborative Document Editor (Google Docs) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Real-Time Collaborative Document Editor (Google Docs)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 24,
+    "dsaTheme": "Topological Sort & DAGs",
+    "title": "Design an E-Commerce Flash Sale Platform (Amazon Prime Day)",
+    "summary": "Production system architecture for Design an E-Commerce Flash Sale Platform (Amazon Prime Day): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design an E-Commerce Flash Sale Platform (Amazon Prime Day)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design an E-Commerce Flash Sale Platform (Amazon Prime Day) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design an E-Commerce Flash Sale Platform (Amazon Prime Day)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 25,
+    "dsaTheme": "Shortest Path: Dijkstra",
+    "title": "Design Cloud Object Storage Service (Amazon S3)",
+    "summary": "Production system architecture for Design Cloud Object Storage Service (Amazon S3): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design Cloud Object Storage Service (Amazon S3)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design Cloud Object Storage Service (Amazon S3) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design Cloud Object Storage Service (Amazon S3)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 26,
+    "dsaTheme": "Disjoint Set Union (DSU)",
+    "title": "Design a Distributed Logging Architecture (ELK / Loki)",
+    "summary": "Production system architecture for Design a Distributed Logging Architecture (ELK / Loki): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Distributed Logging Architecture (ELK / Loki)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Logging Architecture (ELK / Loki) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Logging Architecture (ELK / Loki)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 27,
+    "dsaTheme": "Tries (Prefix Trees)",
+    "title": "Design a Real-Time Recommendation Engine (TikTok/YouTube)",
+    "summary": "Production system architecture for Design a Real-Time Recommendation Engine (TikTok/YouTube): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Real-Time Recommendation Engine (TikTok/YouTube)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Real-Time Recommendation Engine (TikTok/YouTube) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Real-Time Recommendation Engine (TikTok/YouTube)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 28,
+    "dsaTheme": "Intervals & Sweep Line",
+    "title": "Design an Ultra-Low Latency Stock Trading Platform (LMAX)",
+    "summary": "Production system architecture for Design an Ultra-Low Latency Stock Trading Platform (LMAX): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design an Ultra-Low Latency Stock Trading Platform (LMAX)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design an Ultra-Low Latency Stock Trading Platform (LMAX) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design an Ultra-Low Latency Stock Trading Platform (LMAX)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 29,
+    "dsaTheme": "String Matching & Rolling Hash",
+    "title": "Design a Distributed Caching System (Redis Cluster)",
+    "summary": "Production system architecture for Design a Distributed Caching System (Redis Cluster): component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Distributed Caching System (Redis Cluster)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Caching System (Redis Cluster) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Caching System (Redis Cluster)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 30,
+    "dsaTheme": "Grand Integration & Review",
+    "title": "Design a Multi-Region Global Active-Active Architecture",
+    "summary": "Production system architecture for Design a Multi-Region Global Active-Active Architecture: component breakdown, scale estimations, bottlenecks, and fault tolerance.",
+    "architecture": "### High-Level Architecture for Design a Multi-Region Global Active-Active Architecture\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.",
+    "tradeoffs": "Choosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Multi-Region Global Active-Active Architecture at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Multi-Region Global Active-Active Architecture?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  }
+]

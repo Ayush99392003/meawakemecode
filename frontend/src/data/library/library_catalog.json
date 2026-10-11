@@ -1,0 +1,1952 @@
+[
+  {
+    "slug": "os/day-1-virtual-memory-address-translation-page-faults",
+    "section": "os",
+    "title": "[Day 1] Virtual Memory, Address Translation & Page Faults",
+    "orderIndex": 1,
+    "tags": [
+      "Operating Systems",
+      "Day 1",
+      "Arrays & Hash Maps"
+    ],
+    "readTimeMinutes": 7,
+    "content": "How CPU MMU translates virtual addresses to physical RAM, TLB caching, page table hierarchies, and the precise anatomy of page faults and swap.\n\n### Mental Model & Core Invariant\nVirtual memory isolates processes into identical 64-bit flat address spaces; the MMU and kernel map virtual pages (typically 4KB) to physical frames on demand.\n\n### Process Memory Hierarchy & Address Translation\n\nEvery modern OS (Linux, macOS, Windows) provides each user process with its own private virtual address space. On 64-bit x86_64 architectures, canonical addresses use 48 bits (256 TB user space), organized into standardized segments:\n\n1. **Text Segment (Code)**: Read-only, executable machine instructions.\n2. **Data & BSS Segments**: Initialized global/static variables (`.data`) and zero-initialized variables (`.bss`).\n3. **Heap**: Dynamically allocated memory via `brk` / `sbrk` or memory-mapped regions via `mmap`. Grows upwards towards higher memory addresses.\n4. **Memory Mapped Region**: Shared libraries (`libc.so`), shared memory blocks, and file backings.\n5. **Stack**: Thread execution frames, local variables, return addresses. Grows downwards.\n\n### The Page Fault Interrupt Lifecycle\n\nWhen the CPU attempts to dereference an address:\n1. **TLB Check**: The Translation Lookaside Buffer (L1 MMU cache) is queried for the Virtual Page Number (VPN). If cached (TLB Hit), translation takes $\\sim 1\\text{ ns}$.\n2. **Page Table Walk**: On a TLB Miss, hardware page table walkers traverse the multi-level page table (CR3 register $\\rightarrow$ PML4 $\\rightarrow$ PDPT $\\rightarrow$ PD $\\rightarrow$ PT).\n3. **Trap Handler Execution**: If the Valid/Present bit is 0, the CPU triggers Interrupt Vector 14 (`#PF` Page Fault Exception). The kernel receives the faulting address in register `CR2` and an error code.\n4. **Frame Allocation & Disk I/O**: If valid virtual memory, the kernel allocates a physical frame (from free page lists), fetches the disk block (from backing store or swap), updates the PTE, sets Present=1, and restarts the faulting instruction.\n\n### Production Incident & Failure Mode\nMajor Page Fault Spikes in High-Throughput Java/Node.js servers: When physical RAM is exhausted and the Linux kernel starts swapping heap pages to disk, page fault latency jumps from nanoseconds to tens of milliseconds (disk I/O wait), causing sudden thread pool starvation and massive p99 latency spikes.",
+    "interviewQuestions": [
+      {
+        "q": "What is the exact distinction between a Minor (Soft) and Major (Hard) Page Fault?",
+        "a": "A minor page fault occurs when the target page is already in physical RAM (e.g. allocated by another process, or lazily mapped via copy-on-write during fork), requiring only a page table update without disk I/O. A major page fault requires blocking disk or swap I/O to read page bytes into physical memory."
+      },
+      {
+        "q": "Why do multi-level page tables save memory compared to a single flat page table?",
+        "a": "A single flat 64-bit page table would require petabytes just to store PTEs. Multi-level tables allow the OS to allocate page table directories lazily; unallocated or sparse virtual memory regions do not require inner page tables to be instantiated in physical RAM."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-2-processes-vs-threads-memory-tcbpcb-context-switching",
+    "section": "os",
+    "title": "[Day 2] Processes vs Threads: Memory, TCB/PCB & Context Switching",
+    "orderIndex": 2,
+    "tags": [
+      "Operating Systems",
+      "Day 2",
+      "Two Pointers"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Detailed internals of Linux task_struct, memory sharing between threads vs processes, clone() flags, and the cost of register saves and TLB flushes during context switching.\n\n### Mental Model & Core Invariant\nA process is an isolated resource container (private page table, file descriptors, credentials); a thread is an execution unit (registers, program counter, private stack) sharing the process address space.\n\n### Process Control Block (PCB) vs Thread Control Block (TCB)\n\nIn the Linux kernel, both processes and threads are represented by the unified struct `task_struct`.\n- When creating a process via `fork()`, a copy-on-write duplicate of the page tables and file descriptor tables is generated.\n- When creating a thread via `pthread_create()` (which invokes `clone()` system call), flags `CLONE_VM`, `CLONE_FS`, `CLONE_FILES`, and `CLONE_SIGHAND` are passed, instructing the kernel to share the virtual memory pointer (`mm_struct`) and file table.\n\n### Anatomy of Context Switch Overhead\n1. **Thread Switch within Same Process**:\n   - Save CPU registers (rax, rbx, rsp, rip, etc.) into the outgoing thread's kernel stack/TCB.\n   - Restore register state from incoming thread's TCB.\n   - **Cost**: $\\sim 1 - 2\\;\\mu\\text{s}$. Memory translation tables (CR3 register) remain untouched.\n2. **Process Switch across Different Processes**:\n   - Save registers and change CPU stack pointer.\n   - Reload register `CR3` with the physical base address of the new process's PML4 page table.\n   - **Invalidation of TLB**: Changing CR3 invalidates non-global TLB entries. Subsequent memory reads incur major TLB misses, slowing instructions down for hundreds of cycles.\n   - **Cost**: $\\sim 3 - 10\\;\\mu\\text{s}$ direct overhead plus severe cache pollution.\n\n### Production Incident & Failure Mode\nContext-Switching Thrashing: Spawning 10,000 OS native threads in a web server causes the CPU to spend over 70% of clock cycles merely executing kernel scheduler context switches instead of servicing HTTP traffic, collapsing overall throughput.",
+    "interviewQuestions": [
+      {
+        "q": "Why do Goroutines or Kotlin Coroutines have less context switch overhead than OS threads?",
+        "a": "Coroutines run in user space (M:N scheduling model) with tiny initial stacks (~2KB vs ~2-8MB OS thread stack), and switching between them does not require a ring 0 kernel privilege transition or TLB flush."
+      },
+      {
+        "q": "What happens to child process file descriptors upon fork()?",
+        "a": "The child gets a copy of the parent's file descriptor table, but both descriptors point to the same underlying open file table entry in the kernel, sharing file offsets and read/write positions."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-3-cpu-scheduling-algorithms-cfs-multilevel-feedback-preemption",
+    "section": "os",
+    "title": "[Day 3] CPU Scheduling Algorithms: CFS, Multilevel Feedback & Preemption",
+    "orderIndex": 3,
+    "tags": [
+      "Operating Systems",
+      "Day 3",
+      "Sliding Window"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Linux Completely Fair Scheduler (CFS), virtual runtime (vruntime), red-black tree task queues, nice values, and real-time scheduling classes (SCHED_FIFO/RR).\n\n### Mental Model & Core Invariant\nCFS tracks each task's accumulated virtual runtime (vruntime); the task that has received the least CPU time is picked next from the leftmost node of a red-black tree.\n\n### Linux CFS Mechanics & vruntime\n\nIn Linux, the Completely Fair Scheduler (CFS) models an ideal multi-tasking CPU on hardware:\n1. **Virtual Runtime (`vruntime`)**: Measures the amount of CPU execution time a thread has consumed, scaled inversely by its priority (`nice` value from -20 to +19).\n   $$vruntime += \\Delta exec\\_time \\times \\frac{NICE\\_0\\_LOAD}{task\\_load}$$\n   High-priority tasks (negative nice) have large `task_load`, so their `vruntime` increases slowly, allowing them to run longer.\n2. **Red-Black Tree Runqueue**: Runnable tasks are sorted by `vruntime`. The CPU always selects the task with the smallest `vruntime` ($O(1)$ lookup via cached leftmost pointer).\n3. **Latency Target & Granularity**: `sysctl_sched_latency` defines the period during which all runnable tasks must run at least once. If too many tasks are runnable, `sysctl_sched_min_granularity` enforces a minimum timeslice (e.g. 0.75ms) to prevent context switch thrashing.\n\n### Production Incident & Failure Mode\nNice-Level Inversion in Mixed Workloads: Running CPU-intensive batch jobs at normal priority alongside latency-sensitive web service threads without proper cgroup scheduling causes batch jobs to monopolize CPU timeslices, degrading API response times.",
+    "interviewQuestions": [
+      {
+        "q": "What is the purpose of the Completely Fair Scheduler (CFS) red-black tree leftmost pointer cache?",
+        "a": "Finding the task with the lowest vruntime in an RB-tree takes O(log N) time, but by caching the leftmost node during tree updates, selecting the next task to run is an O(1) operation."
+      },
+      {
+        "q": "How does CFS handle I/O-bound processes versus CPU-bound processes?",
+        "a": "I/O-bound processes spend most of their time blocked waiting for network or disk. Their vruntime remains stagnant while running processes advance. When an I/O-bound process wakes up, its vruntime is much lower than running tasks, giving it immediate preemption priority."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-4-synchronization-primitives-mutex-semaphores-spinlocks-cas",
+    "section": "os",
+    "title": "[Day 4] Synchronization Primitives: Mutex, Semaphores, Spinlocks & CAS",
+    "orderIndex": 4,
+    "tags": [
+      "Operating Systems",
+      "Day 4",
+      "Prefix Sums & Difference Arrays"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Hardware atomic instructions (CMPXCHG), test-and-set, cache line bouncing, futex system call, and lock-free concurrency mechanics.\n\n### Mental Model & Core Invariant\nLocks protect shared invariants; futex optimizes performance by spinning in user-space first and only invoking kernel sleep if contention persists.\n\n### Hardware Atomics & Compare-And-Swap (CAS)\nAt the hardware level, atomic operations rely on CPU cache coherency protocols (MESI/MOESI). An atomic instruction like `CMPXCHG` on x86 locks the cache line, guaranteeing that no other core can read or modify the cache line simultaneously.\n\n### The Linux Futex (Fast Userspace Mutex)\nTraditional POSIX mutexes required a system call into the kernel for every lock/unlock. The Linux `futex` splits the path:\n1. **Uncontended Case**: An atomic CAS operation updates an integer in user-space memory ($\\sim 10\\text{ ns}$). Zero kernel transitions.\n2. **Contended Case**: If CAS fails, the thread invokes `sys_futex(FUTEX_WAIT)`, placing the thread onto the kernel's wait queue to sleep until woken by `sys_futex(FUTEX_WAKE)`.\n\n### Production Incident & Failure Mode\nPriority Inversion Deadlock: A low-priority thread acquires a mutex; a high-priority thread preempts and spins waiting for the lock, but an intermediate priority thread keeps the low-priority thread from running, starving the high-priority thread.",
+    "interviewQuestions": [
+      {
+        "q": "When should a developer use a Spinlock instead of a Mutex?",
+        "a": "Spinlocks should only be used when the critical section is extremely short (< a few nanoseconds) and the thread is running on a multi-core CPU where sleeping and context switching would cost more than briefly spinning."
+      },
+      {
+        "q": "What is the ABA problem in lock-free CAS data structures?",
+        "a": "A memory location changes from A to B and back to A between the read and CAS phases, causing the CAS to succeed despite intermediate state mutations. Resolved using tagged pointers or version counters."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-5-deadlocks-coffman-conditions-prevention-bankers-algorithm",
+    "section": "os",
+    "title": "[Day 5] Deadlocks: Coffman Conditions, Prevention & Banker's Algorithm",
+    "orderIndex": 5,
+    "tags": [
+      "Operating Systems",
+      "Day 5",
+      "Binary Search on Arrays"
+    ],
+    "readTimeMinutes": 7,
+    "content": "The 4 necessary conditions for deadlock, resource allocation graphs, lock ordering protocols, and deadlock detection via cycle detection.\n\n### Mental Model & Core Invariant\nDeadlock occurs if and only if all 4 Coffman conditions hold: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. Breaking any one condition guarantees deadlock freedom.\n\n### The 4 Coffman Conditions\n1. **Mutual Exclusion**: At least one resource must be held in non-shareable mode.\n2. **Hold and Wait**: A process holds at least one resource and requests additional resources held by other processes.\n3. **No Preemption**: Resources cannot be forcibly taken; only released voluntarily.\n4. **Circular Wait**: A closed chain of processes exists where each process holds a resource needed by the next.\n\n### Prevention: Strict Lock Ordering\nTo eliminate Circular Wait, assign a total ordering $\\mathcal{O}(L_i)$ to all locks in the system. Any thread acquiring multiple locks must acquire them in monotonically increasing order.\n\n### Production Incident & Failure Mode\nDatabase Deadlock in Payment Transfers: Transaction 1 updates Account A then Account B; Transaction 2 updates Account B then Account A simultaneously. Both block on row-level exclusive locks until the DBMS deadlock detector detects a cycle and aborts one transaction.",
+    "interviewQuestions": [
+      {
+        "q": "How does a relational database engine detect and resolve deadlocks?",
+        "a": "The engine maintains a Wait-For Graph (WFG) where nodes are transactions and directed edges represent lock waits. A background thread runs cycle detection; on finding a cycle, it rolls back the transaction with the lowest cost."
+      },
+      {
+        "q": "Why is Banker's Algorithm rarely used in general-purpose OS kernels?",
+        "a": "It requires processes to declare their maximum resource claims in advance, which is impossible in dynamic multi-tenant workloads."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-6-file-systems-inodes-vfs-dirty-page-writeback",
+    "section": "os",
+    "title": "[Day 6] File Systems, Inodes, VFS & Dirty Page Writeback",
+    "orderIndex": 6,
+    "tags": [
+      "Operating Systems",
+      "Day 6",
+      "Binary Search on Answer Space"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Virtual File System (VFS), Inode data structures, dentry cache, page cache, direct I/O (O_DIRECT), and fsync durability semantics.\n\n### Mental Model & Core Invariant\nAn inode stores metadata and data block pointers, but not the file name. Directory entries (dentries) map file names to inode numbers in a tree hierarchy.\n\n### Inode Structure & Storage\nAn inode contains: file type, file permissions, owner UID/GID, file size, timestamps (atime, mtime, ctime), link count, and block pointers (direct blocks, indirect, double-indirect).\n\n### The Page Cache & fsync()\nWhen writing to a file via standard `write()`:\n1. The kernel copies data from the user buffer into the kernel **Page Cache** (RAM) and returns immediately ($O(1)$ latency).\n2. The page is marked as **Dirty**.\n3. Background kernel threads (`flusher` / `kswapd`) flush dirty pages to disk every `dirty_writeback_centisecs` (default 5s).\n4. If power fails before the flush, data is lost. Invoking `fsync(fd)` forces a hardware cache flush to persistent disk before returning.\n\n### Production Incident & Failure Mode\nSilent Data Loss in Log Engines: Writing transaction logs without calling `fdatasync()` results in completed database transactions being lost on sudden server kernel panics because logs resided only in volatile RAM page cache.",
+    "interviewQuestions": [
+      {
+        "q": "What is the difference between a Hard Link and a Symbolic (Soft) Link?",
+        "a": "A hard link is a new directory entry pointing directly to the existing inode number (increasing the link count). A symlink is an independent file containing the path string of the target file."
+      },
+      {
+        "q": "What does O_DIRECT flag do when opening a file in Linux?",
+        "a": "It bypasses the kernel page cache entirely, performing direct DMA transfers between user-space memory buffers and the storage controller, used by high-performance database storage engines."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-7-inter-process-communication-ipc-unix-sockets-shared-memory-pipes",
+    "section": "os",
+    "title": "[Day 7] Inter-Process Communication (IPC): Unix Sockets, Shared Memory & Pipes",
+    "orderIndex": 7,
+    "tags": [
+      "Operating Systems",
+      "Day 7",
+      "Bit Manipulation & Fast Math"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Comparison of IPC primitives: Anonymous pipes, Named pipes (FIFOs), Unix Domain Sockets, POSIX Shared Memory (shm), and message queues.\n\n### Mental Model & Core Invariant\nShared memory is the fastest IPC because it avoids kernel memory copying; Unix Domain Sockets provide the best combination of security, stream abstractions, and file descriptor passing.\n\n### IPC Mechanisms & Throughput Comparison\n1. **Pipes / FIFOs**: Unidirectional byte stream mediated by a kernel buffer (default 64KB). Involves 2 memory copies (user $\\rightarrow$ kernel $\\rightarrow$ user).\n2. **Unix Domain Sockets (UDS)**: Bidirectional, packet or stream based. Supports sending credentials and open file descriptors (`SCM_RIGHTS`). Bypasses network routing and checksums.\n3. **Shared Memory (`shm_open`, `mmap`)**: Maps the same physical RAM frames into the virtual address spaces of two processes. Zero copies; requires synchronization primitives (semaphores/mutexes) to prevent race conditions.\n\n### Production Incident & Failure Mode\nBroken Pipe (SIGPIPE) Crashes: Writing to a pipe or socket whose reading process has terminated raises `SIGPIPE`. Without an explicit signal handler or `MSG_NOSIGNAL` flag, the writing process terminates abruptly.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Shared Memory faster than Unix Domain Sockets?",
+        "a": "Shared memory allows processes to read and write directly to physical RAM without kernel intervention or data copying, whereas Unix Domain Sockets require copying data through kernel socket buffers."
+      },
+      {
+        "q": "What does SCM_RIGHTS allow over Unix Domain Sockets?",
+        "a": "It allows a process to pass an open file descriptor (e.g. an open network socket) directly to another process, enabling zero-downtime hot reloads in Nginx and Envoy."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-8-osi-tcpip-model-encapsulation-mtu-mss-packet-headers",
+    "section": "cn",
+    "title": "[Day 8] OSI & TCP/IP Model: Encapsulation, MTU, MSS & Packet Headers",
+    "orderIndex": 8,
+    "tags": [
+      "Computer Networks",
+      "Day 8",
+      "Stacks & Monotonic Stack"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Detailed walk from Application layer to Physical: Ethernet frames, IP headers, TCP headers, Maximum Transmission Unit (MTU), and fragmentation hazards.\n\n### Mental Model & Core Invariant\nNetworking is layered encapsulation: every layer wraps higher-layer data with its own header containing routing and protocol metadata.\n\n### Header Overhead & Encapsulation\n1. **Ethernet Layer (Data Link)**: 14-byte header (Src MAC, Dst MAC, EtherType) + 4-byte CRC checksum. Standard MTU = 1,500 bytes.\n2. **IPv4 Layer (Network)**: 20-byte base header (Src IP, Dst IP, TTL, Protocol, Total Length).\n3. **TCP Layer (Transport)**: 20-byte base header (Src Port, Dst Port, Seq Number, Ack Number, Flags, Window Size).\n4. **Maximum Segment Size (MSS)**:\n   $$MSS = MTU - (IP\\_Header + TCP\\_Header) = 1500 - (20 + 20) = 1,460\\text{ bytes}$$\n\n### IP Fragmentation & Path MTU Discovery (PMTUD)\nIf a packet exceeds intermediate hop MTU and has the `DF` (Don't Fragment) bit set, the router drops the packet and returns an ICMP Type 3 Code 4 (Fragmentation Needed) message, enabling PMTUD.\n\n### Production Incident & Failure Mode\nBlack Hole Routers in Cloud VPCs: Misconfigured security firewalls dropping all ICMP traffic prevent PMTUD notifications from reaching the sender, causing TCP connections to hang indefinitely when sending large payloads.",
+    "interviewQuestions": [
+      {
+        "q": "What is the exact mathematical relationship between MTU and MSS?",
+        "a": "MSS is the maximum payload a TCP segment can carry, equal to MTU minus the IP header (20 bytes) and TCP header (20 bytes)."
+      },
+      {
+        "q": "What happens when an IP packet is fragmented and one fragment is lost in transit?",
+        "a": "The destination reassembly timer expires, and the entire IP datagram must be discarded and retransmitted by the transport layer."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-9-tcp-deep-dive-3-way-handshake-flow-control-time_wait",
+    "section": "cn",
+    "title": "[Day 9] TCP Deep-Dive: 3-Way Handshake, Flow Control & TIME_WAIT",
+    "orderIndex": 9,
+    "tags": [
+      "Computer Networks",
+      "Day 9",
+      "Queues & Monotonic Deque"
+    ],
+    "readTimeMinutes": 7,
+    "content": "SYN/ACK sequence numbers, SYN flood defenses (SYN cookies), sliding window buffer tuning, TCP states, and the rationale behind TIME_WAIT (2MSL).\n\n### Mental Model & Core Invariant\nTCP is a reliable byte-stream abstraction over an unreliable network, maintained via acknowledgments, sliding windows, and congestion control loops.\n\n### TCP 3-Way Handshake\n1. **Client $\\rightarrow$ Server**: `SYN` (Seq = $ISN_C$, Window = $W_C$, MSS = 1460). State: `SYN_SENT`.\n2. **Server $\\rightarrow$ Client**: `SYN + ACK` (Seq = $ISN_S$, Ack = $ISN_C + 1$). State: `SYN_RCVD`.\n3. **Client $\\rightarrow$ Server**: `ACK` (Ack = $ISN_S + 1$). State: `ESTABLISHED`.\n\n### Why the TIME_WAIT State (2MSL) Exists\nWhen a socket initiates an active close, it enters `TIME_WAIT` for 2 Maximum Segment Lifetimes ($2 \\times 60\\text{s} = 120\\text{s}$):\n1. **Ensure Final ACK Delivery**: If the server didn't receive the final ACK, it retransmits `FIN`. The client in `TIME_WAIT` can resend the ACK.\n2. **Prevent Stale Packet Confusion**: Ensures all delayed packets from the old connection die in the network before a new connection reuses the same 4-tuple (SrcIP, SrcPort, DstIP, DstPort).\n\n### Production Incident & Failure Mode\nEphemeral Port Exhaustion: A microservice opening short-lived HTTP/1.0 connections without keep-alive exhausts all ~60,000 ephemeral ports due to sockets lingering in TIME_WAIT, causing `EADDRNOTAVAIL` connection errors.",
+    "interviewQuestions": [
+      {
+        "q": "How do SYN Cookies protect against SYN Flood DDoS attacks?",
+        "a": "The server does not allocate a Transmission Control Block (TCB) in RAM upon receiving SYN. Instead, it encodes client connection parameters and a cryptographic hash into the initial sequence number (ISN). When the client ACKs, the server validates the hash and instantiates the connection."
+      },
+      {
+        "q": "What is the Nagle algorithm and why is TCP_NODELAY often enabled in gaming and financial systems?",
+        "a": "Nagle's algorithm buffers small outgoing packets until an outstanding ACK arrives to reduce header overhead. TCP_NODELAY disables this buffering, sending packets immediately to minimize latency."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-10-udp-quic-http-evolution-http11-vs-http2-vs-http3",
+    "section": "cn",
+    "title": "[Day 10] UDP, QUIC & HTTP Evolution: HTTP/1.1 vs HTTP/2 vs HTTP/3",
+    "orderIndex": 10,
+    "tags": [
+      "Computer Networks",
+      "Day 10",
+      "Linked List Patterns"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Evolution of web transport: HTTP/1.1 Head-of-Line blocking, HTTP/2 multiplexed streams, and HTTP/3 over QUIC UDP eliminating transport-layer HoL blocking.\n\n### Mental Model & Core Invariant\nHTTP/2 solved application-layer HoL blocking via binary framing; HTTP/3 solved transport-layer HoL blocking by rebuilding reliable streams directly over UDP.\n\n### Protocol Comparison Matrix\n\n| Feature | HTTP/1.1 | HTTP/2 | HTTP/3 (QUIC) |\n| :--- | :--- | :--- | :--- |\n| **Transport Protocol** | TCP | TCP | UDP (QUIC) |\n| **Data Framing** | Plaintext ASCII | Binary Frames | Binary Frames |\n| **Multiplexing** | No (Pipelining flawed) | Yes (Single TCP stream) | Yes (Independent QUIC streams) |\n| **Transport HoL Blocking** | Yes | Yes (1 dropped packet stalls all streams) | **No** (Streams are fully independent) |\n| **Connection Setup** | 2-3 RTT (TCP + TLS) | 2-3 RTT (TCP + TLS) | **0-1 RTT** (Combined Handshake) |\n| **Connection Migration** | Breaks on IP change | Breaks on IP change | **Preserved via 64-bit Connection ID** |\n\n### Production Incident & Failure Mode\nHTTP/2 Packet Loss Degradation: On mobile cellular networks with 2% packet loss, HTTP/2 performs worse than HTTP/1.1 because a single lost TCP packet stalls the entire multiplexed TCP connection for all active parallel streams.",
+    "interviewQuestions": [
+      {
+        "q": "Why does QUIC use UDP instead of creating a brand new transport protocol alongside TCP and UDP?",
+        "a": "Internet middleboxes (NATs, firewalls, routers) drop packets with unrecognized IP protocol numbers (\"ossification\"). UDP is universally permitted across all public routers and firewalls."
+      },
+      {
+        "q": "How does QUIC support seamless Connection Migration when a mobile device switches from Wi-Fi to 5G?",
+        "a": "QUIC identifies connections using a unique 64-bit Connection ID in the header rather than the IP/Port 4-tuple. When the IP address changes, the Connection ID remains unchanged, avoiding renegotiation."
+      }
+    ]
+  },
+  {
+    "slug": "oop/day-11-dns-protocol-resolvers-ttl-anycast-routing",
+    "section": "oop",
+    "title": "[Day 11] DNS Protocol, Resolvers, TTL & Anycast Routing",
+    "orderIndex": 11,
+    "tags": [
+      "Distributed Systems & OOP",
+      "Day 11",
+      "Recursion & Backtracking"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into DNS Protocol, Resolvers, TTL & Anycast Routing: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of DNS Protocol, Resolvers, TTL & Anycast Routing under extreme production loads.\n\n### Core Architecture & Operating Principles of DNS Protocol, Resolvers, TTL & Anycast Routing\n\nProduction distributed and operating systems depend on clear contracts between software layers. In DNS Protocol, Resolvers, TTL & Anycast Routing, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in DNS Protocol, Resolvers, TTL & Anycast Routing: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing DNS Protocol, Resolvers, TTL & Anycast Routing?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in DNS Protocol, Resolvers, TTL & Anycast Routing?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-12-tls-13-handshake-asymmetric-encryption-pki",
+    "section": "os",
+    "title": "[Day 12] TLS 1.3 Handshake, Asymmetric Encryption & PKI",
+    "orderIndex": 12,
+    "tags": [
+      "Operating Systems",
+      "Day 12",
+      "Binary Trees: DFS & Paths"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into TLS 1.3 Handshake, Asymmetric Encryption & PKI: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of TLS 1.3 Handshake, Asymmetric Encryption & PKI under extreme production loads.\n\n### Core Architecture & Operating Principles of TLS 1.3 Handshake, Asymmetric Encryption & PKI\n\nProduction distributed and operating systems depend on clear contracts between software layers. In TLS 1.3 Handshake, Asymmetric Encryption & PKI, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in TLS 1.3 Handshake, Asymmetric Encryption & PKI: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing TLS 1.3 Handshake, Asymmetric Encryption & PKI?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in TLS 1.3 Handshake, Asymmetric Encryption & PKI?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-13-relational-database-storage-b-trees-buffer-pool",
+    "section": "cn",
+    "title": "[Day 13] Relational Database Storage: B+ Trees & Buffer Pool",
+    "orderIndex": 13,
+    "tags": [
+      "Computer Networks",
+      "Day 13",
+      "Binary Trees: BFS & Views"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Relational Database Storage: B+ Trees & Buffer Pool: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Relational Database Storage: B+ Trees & Buffer Pool under extreme production loads.\n\n### Core Architecture & Operating Principles of Relational Database Storage: B+ Trees & Buffer Pool\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Relational Database Storage: B+ Trees & Buffer Pool, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Relational Database Storage: B+ Trees & Buffer Pool: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Relational Database Storage: B+ Trees & Buffer Pool?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Relational Database Storage: B+ Trees & Buffer Pool?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "dbms/day-14-database-acid-write-ahead-logging-wal-aries",
+    "section": "dbms",
+    "title": "[Day 14] Database ACID, Write-Ahead Logging (WAL) & ARIES",
+    "orderIndex": 14,
+    "tags": [
+      "Database Management",
+      "Day 14",
+      "Binary Search Trees (BST)"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Database ACID, Write-Ahead Logging (WAL) & ARIES: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Database ACID, Write-Ahead Logging (WAL) & ARIES under extreme production loads.\n\n### Core Architecture & Operating Principles of Database ACID, Write-Ahead Logging (WAL) & ARIES\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database ACID, Write-Ahead Logging (WAL) & ARIES, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Database ACID, Write-Ahead Logging (WAL) & ARIES: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database ACID, Write-Ahead Logging (WAL) & ARIES?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database ACID, Write-Ahead Logging (WAL) & ARIES?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "oop/day-15-transaction-isolation-levels-dirty-reads-to-mvcc",
+    "section": "oop",
+    "title": "[Day 15] Transaction Isolation Levels: Dirty Reads to MVCC",
+    "orderIndex": 15,
+    "tags": [
+      "Distributed Systems & OOP",
+      "Day 15",
+      "Heaps & Priority Queues"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Transaction Isolation Levels: Dirty Reads to MVCC: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Transaction Isolation Levels: Dirty Reads to MVCC under extreme production loads.\n\n### Core Architecture & Operating Principles of Transaction Isolation Levels: Dirty Reads to MVCC\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Transaction Isolation Levels: Dirty Reads to MVCC, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Transaction Isolation Levels: Dirty Reads to MVCC: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Transaction Isolation Levels: Dirty Reads to MVCC?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Transaction Isolation Levels: Dirty Reads to MVCC?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-16-database-indexing-clustered-secondary-b-tree-fragmentation",
+    "section": "os",
+    "title": "[Day 16] Database Indexing: Clustered, Secondary & B-Tree Fragmentation",
+    "orderIndex": 16,
+    "tags": [
+      "Operating Systems",
+      "Day 16",
+      "Greedy Algorithms"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Database Indexing: Clustered, Secondary & B-Tree Fragmentation: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Database Indexing: Clustered, Secondary & B-Tree Fragmentation under extreme production loads.\n\n### Core Architecture & Operating Principles of Database Indexing: Clustered, Secondary & B-Tree Fragmentation\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database Indexing: Clustered, Secondary & B-Tree Fragmentation, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Database Indexing: Clustered, Secondary & B-Tree Fragmentation: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database Indexing: Clustered, Secondary & B-Tree Fragmentation?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database Indexing: Clustered, Secondary & B-Tree Fragmentation?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-17-database-sharding-partitioning-cross-shard-joins",
+    "section": "cn",
+    "title": "[Day 17] Database Sharding, Partitioning & Cross-Shard Joins",
+    "orderIndex": 17,
+    "tags": [
+      "Computer Networks",
+      "Day 17",
+      "Dynamic Programming: 1D Basics"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Database Sharding, Partitioning & Cross-Shard Joins: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Database Sharding, Partitioning & Cross-Shard Joins under extreme production loads.\n\n### Core Architecture & Operating Principles of Database Sharding, Partitioning & Cross-Shard Joins\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database Sharding, Partitioning & Cross-Shard Joins, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Database Sharding, Partitioning & Cross-Shard Joins: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database Sharding, Partitioning & Cross-Shard Joins?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database Sharding, Partitioning & Cross-Shard Joins?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "dbms/day-18-nosql-storage-engines-lsm-trees-vs-b-trees",
+    "section": "dbms",
+    "title": "[Day 18] NoSQL Storage Engines: LSM-Trees vs B-Trees",
+    "orderIndex": 18,
+    "tags": [
+      "Database Management",
+      "Day 18",
+      "Dynamic Programming: State Machine"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into NoSQL Storage Engines: LSM-Trees vs B-Trees: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of NoSQL Storage Engines: LSM-Trees vs B-Trees under extreme production loads.\n\n### Core Architecture & Operating Principles of NoSQL Storage Engines: LSM-Trees vs B-Trees\n\nProduction distributed and operating systems depend on clear contracts between software layers. In NoSQL Storage Engines: LSM-Trees vs B-Trees, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in NoSQL Storage Engines: LSM-Trees vs B-Trees: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing NoSQL Storage Engines: LSM-Trees vs B-Trees?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in NoSQL Storage Engines: LSM-Trees vs B-Trees?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "oop/day-19-solid-principles-object-oriented-architecture",
+    "section": "oop",
+    "title": "[Day 19] SOLID Principles & Object-Oriented Architecture",
+    "orderIndex": 19,
+    "tags": [
+      "Distributed Systems & OOP",
+      "Day 19",
+      "Dynamic Programming: 2D Grids"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into SOLID Principles & Object-Oriented Architecture: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of SOLID Principles & Object-Oriented Architecture under extreme production loads.\n\n### Core Architecture & Operating Principles of SOLID Principles & Object-Oriented Architecture\n\nProduction distributed and operating systems depend on clear contracts between software layers. In SOLID Principles & Object-Oriented Architecture, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in SOLID Principles & Object-Oriented Architecture: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing SOLID Principles & Object-Oriented Architecture?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in SOLID Principles & Object-Oriented Architecture?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-20-creational-behavioral-design-patterns-in-systems",
+    "section": "os",
+    "title": "[Day 20] Creational & Behavioral Design Patterns in Systems",
+    "orderIndex": 20,
+    "tags": [
+      "Operating Systems",
+      "Day 20",
+      "Dynamic Programming: Knapsack"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Creational & Behavioral Design Patterns in Systems: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Creational & Behavioral Design Patterns in Systems under extreme production loads.\n\n### Core Architecture & Operating Principles of Creational & Behavioral Design Patterns in Systems\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Creational & Behavioral Design Patterns in Systems, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Creational & Behavioral Design Patterns in Systems: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Creational & Behavioral Design Patterns in Systems?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Creational & Behavioral Design Patterns in Systems?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-21-linux-io-multiplexing-select-poll-epoll-io_uring",
+    "section": "cn",
+    "title": "[Day 21] Linux I/O Multiplexing: select, poll, epoll & io_uring",
+    "orderIndex": 21,
+    "tags": [
+      "Computer Networks",
+      "Day 21",
+      "Dynamic Programming: Strings"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Linux I/O Multiplexing: select, poll, epoll & io_uring: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Linux I/O Multiplexing: select, poll, epoll & io_uring under extreme production loads.\n\n### Core Architecture & Operating Principles of Linux I/O Multiplexing: select, poll, epoll & io_uring\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Linux I/O Multiplexing: select, poll, epoll & io_uring, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Linux I/O Multiplexing: select, poll, epoll & io_uring: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Linux I/O Multiplexing: select, poll, epoll & io_uring?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Linux I/O Multiplexing: select, poll, epoll & io_uring?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "dbms/day-22-memory-management-garbage-collection-algorithms",
+    "section": "dbms",
+    "title": "[Day 22] Memory Management & Garbage Collection Algorithms",
+    "orderIndex": 22,
+    "tags": [
+      "Database Management",
+      "Day 22",
+      "Graph Fundamentals: BFS & DFS"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Memory Management & Garbage Collection Algorithms: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Memory Management & Garbage Collection Algorithms under extreme production loads.\n\n### Core Architecture & Operating Principles of Memory Management & Garbage Collection Algorithms\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Memory Management & Garbage Collection Algorithms, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Memory Management & Garbage Collection Algorithms: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Memory Management & Garbage Collection Algorithms?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Memory Management & Garbage Collection Algorithms?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "oop/day-23-cpu-caches-cache-lines-false-sharing-numa",
+    "section": "oop",
+    "title": "[Day 23] CPU Caches, Cache Lines, False Sharing & NUMA",
+    "orderIndex": 23,
+    "tags": [
+      "Distributed Systems & OOP",
+      "Day 23",
+      "Matrix as Graph"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into CPU Caches, Cache Lines, False Sharing & NUMA: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of CPU Caches, Cache Lines, False Sharing & NUMA under extreme production loads.\n\n### Core Architecture & Operating Principles of CPU Caches, Cache Lines, False Sharing & NUMA\n\nProduction distributed and operating systems depend on clear contracts between software layers. In CPU Caches, Cache Lines, False Sharing & NUMA, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in CPU Caches, Cache Lines, False Sharing & NUMA: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing CPU Caches, Cache Lines, False Sharing & NUMA?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in CPU Caches, Cache Lines, False Sharing & NUMA?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-24-distributed-transactions-2pc-3pc-saga-choreography",
+    "section": "os",
+    "title": "[Day 24] Distributed Transactions: 2PC, 3PC & Saga Choreography",
+    "orderIndex": 24,
+    "tags": [
+      "Operating Systems",
+      "Day 24",
+      "Topological Sort & DAGs"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Distributed Transactions: 2PC, 3PC & Saga Choreography: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Distributed Transactions: 2PC, 3PC & Saga Choreography under extreme production loads.\n\n### Core Architecture & Operating Principles of Distributed Transactions: 2PC, 3PC & Saga Choreography\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Transactions: 2PC, 3PC & Saga Choreography, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Distributed Transactions: 2PC, 3PC & Saga Choreography: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Transactions: 2PC, 3PC & Saga Choreography?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Transactions: 2PC, 3PC & Saga Choreography?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-25-distributed-consensus-raft-vs-paxos-split-brain",
+    "section": "cn",
+    "title": "[Day 25] Distributed Consensus: Raft vs Paxos & Split-Brain",
+    "orderIndex": 25,
+    "tags": [
+      "Computer Networks",
+      "Day 25",
+      "Shortest Path: Dijkstra"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Distributed Consensus: Raft vs Paxos & Split-Brain: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Distributed Consensus: Raft vs Paxos & Split-Brain under extreme production loads.\n\n### Core Architecture & Operating Principles of Distributed Consensus: Raft vs Paxos & Split-Brain\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Consensus: Raft vs Paxos & Split-Brain, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Distributed Consensus: Raft vs Paxos & Split-Brain: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Consensus: Raft vs Paxos & Split-Brain?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Consensus: Raft vs Paxos & Split-Brain?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "dbms/day-26-distributed-clocks-ntp-lamport-vector-clocks",
+    "section": "dbms",
+    "title": "[Day 26] Distributed Clocks: NTP, Lamport & Vector Clocks",
+    "orderIndex": 26,
+    "tags": [
+      "Database Management",
+      "Day 26",
+      "Disjoint Set Union (DSU)"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Distributed Clocks: NTP, Lamport & Vector Clocks: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Distributed Clocks: NTP, Lamport & Vector Clocks under extreme production loads.\n\n### Core Architecture & Operating Principles of Distributed Clocks: NTP, Lamport & Vector Clocks\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Clocks: NTP, Lamport & Vector Clocks, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Distributed Clocks: NTP, Lamport & Vector Clocks: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Clocks: NTP, Lamport & Vector Clocks?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Clocks: NTP, Lamport & Vector Clocks?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "oop/day-27-serialization-rpc-protocols-protobuf-grpc-vs-rest",
+    "section": "oop",
+    "title": "[Day 27] Serialization & RPC Protocols: Protobuf, gRPC vs REST",
+    "orderIndex": 27,
+    "tags": [
+      "Distributed Systems & OOP",
+      "Day 27",
+      "Tries (Prefix Trees)"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Serialization & RPC Protocols: Protobuf, gRPC vs REST: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Serialization & RPC Protocols: Protobuf, gRPC vs REST under extreme production loads.\n\n### Core Architecture & Operating Principles of Serialization & RPC Protocols: Protobuf, gRPC vs REST\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Serialization & RPC Protocols: Protobuf, gRPC vs REST, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Serialization & RPC Protocols: Protobuf, gRPC vs REST: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Serialization & RPC Protocols: Protobuf, gRPC vs REST?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Serialization & RPC Protocols: Protobuf, gRPC vs REST?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "os/day-28-modern-web-security-oauth-20-jwt-csrf-xss",
+    "section": "os",
+    "title": "[Day 28] Modern Web Security: OAuth 2.0, JWT, CSRF & XSS",
+    "orderIndex": 28,
+    "tags": [
+      "Operating Systems",
+      "Day 28",
+      "Intervals & Sweep Line"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Modern Web Security: OAuth 2.0, JWT, CSRF & XSS: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Modern Web Security: OAuth 2.0, JWT, CSRF & XSS under extreme production loads.\n\n### Core Architecture & Operating Principles of Modern Web Security: OAuth 2.0, JWT, CSRF & XSS\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Modern Web Security: OAuth 2.0, JWT, CSRF & XSS, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Modern Web Security: OAuth 2.0, JWT, CSRF & XSS: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Modern Web Security: OAuth 2.0, JWT, CSRF & XSS?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Modern Web Security: OAuth 2.0, JWT, CSRF & XSS?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "cn/day-29-websockets-server-sent-events-sse-connection-scale",
+    "section": "cn",
+    "title": "[Day 29] WebSockets, Server-Sent Events (SSE) & Connection Scale",
+    "orderIndex": 29,
+    "tags": [
+      "Computer Networks",
+      "Day 29",
+      "String Matching & Rolling Hash"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into WebSockets, Server-Sent Events (SSE) & Connection Scale: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of WebSockets, Server-Sent Events (SSE) & Connection Scale under extreme production loads.\n\n### Core Architecture & Operating Principles of WebSockets, Server-Sent Events (SSE) & Connection Scale\n\nProduction distributed and operating systems depend on clear contracts between software layers. In WebSockets, Server-Sent Events (SSE) & Connection Scale, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in WebSockets, Server-Sent Events (SSE) & Connection Scale: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing WebSockets, Server-Sent Events (SSE) & Connection Scale?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in WebSockets, Server-Sent Events (SSE) & Connection Scale?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "dbms/day-30-production-sre-distributed-tracing-apm-latency-slos",
+    "section": "dbms",
+    "title": "[Day 30] Production SRE: Distributed Tracing, APM & Latency SLOs",
+    "orderIndex": 30,
+    "tags": [
+      "Database Management",
+      "Day 30",
+      "Grand Integration & Review"
+    ],
+    "readTimeMinutes": 7,
+    "content": "Deep dive into Production SRE: Distributed Tracing, APM & Latency SLOs: core mechanics, failure modes, latency characteristics, and system invariants.\n\n### Mental Model & Core Invariant\nUnderstanding the architectural guarantees and trade-offs of Production SRE: Distributed Tracing, APM & Latency SLOs under extreme production loads.\n\n### Core Architecture & Operating Principles of Production SRE: Distributed Tracing, APM & Latency SLOs\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Production SRE: Distributed Tracing, APM & Latency SLOs, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.\n\n### Production Incident & Failure Mode\nProduction Failure in Production SRE: Distributed Tracing, APM & Latency SLOs: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Production SRE: Distributed Tracing, APM & Latency SLOs?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Production SRE: Distributed Tracing, APM & Latency SLOs?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-1-system-design-foundations-latency-throughput-cappacelc",
+    "section": "system_design",
+    "title": "[Day 1] System Design Foundations: Latency, Throughput & CAP/PACELC",
+    "orderIndex": 1,
+    "tags": [
+      "System Design",
+      "Day 1",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Foundational distributed systems principles: latency numbers every engineer should know, throughput bottlenecks, CAP theorem, and PACELC in real-world high availability.\n\n### Latency Numbers Every Distributed Systems Engineer Must Know\n\n| Operation | Latency | Real-World Equivalent Scale |\n| :--- | :--- | :--- |\n| L1 Cache Reference | $0.5\\text{ ns}$ | 1 heartbeat |\n| Branch Mispredict | $5\\text{ ns}$ | 10 heartbeats |\n| L2 Cache Reference | $7\\text{ ns}$ | 14 heartbeats |\n| Mutex Lock / Unlock | $25\\text{ ns}$ | 50 heartbeats |\n| Main Memory (RAM) Access | $100\\text{ ns}$ | 3.3 minutes |\n| Read 1 MB sequentially from Memory | $3,000\\text{ ns}$ ($3\\;\\mu\\text{s}$) | 1.5 hours |\n| NVMe SSD Random Read | $10,000\\text{ ns}$ ($10\\;\\mu\\text{s}$) | 5 hours |\n| SSD 1 MB Sequential Read | $50,000\\text{ ns}$ ($50\\;\\mu\\text{s}$) | 1.1 days |\n| Round trip within same datacenter | $500,000\\text{ ns}$ ($0.5\\text{ ms}$) | 11.5 days |\n| Read 1 MB sequentially from SSD | $1,000,000\\text{ ns}$ ($1\\text{ ms}$) | 23 days |\n| Disk Seek (HDD) | $10,000,000\\text{ ns}$ ($10\\text{ ms}$) | 7.6 months |\n| Send packet CA $\\rightarrow$ Netherlands $\\rightarrow$ CA | $150,000,000\\text{ ns}$ ($150\\text{ ms}$) | 9.5 years |\n\n### CAP vs PACELC Theorem\nThe traditional CAP theorem states that under network partitions ($P$), a distributed system must choose between Consistency ($C$) and Availability ($A$).\n\n**PACELC extends this to normal operations**:\n- **If Partition ($P$)**: Choose between Availability ($A$) and Consistency ($C$).\n- **Else ($E$)**: Choose between Latency ($L$) and Consistency ($C$).\n\nExamples:\n- **MongoDB / DynamoDB**: PA/EL (Partition $\\rightarrow$ Availability, Else $\\rightarrow$ Latency)\n- **Google Spanner / CockroachDB**: PC/EC (Partition $\\rightarrow$ Consistency, Else $\\rightarrow$ Consistency via TrueTime/Paxos)\n\n### Bottlenecks & Critical Trade-offs\nPrioritizing strong linearizability requires cross-datacenter quorum round-trips ($>100\\text{ ms}$ latency), whereas choosing eventual consistency allows single-datacenter local reads ($<2\\text{ ms}$ latency) with the risk of stale reads.",
+    "interviewQuestions": [
+      {
+        "q": "Why does the CAP theorem apply strictly only when a network partition actually occurs?",
+        "a": "In steady state without network partitions, both consistency and availability can be satisfied simultaneously. The tradeoff during normal operation is between Latency and Consistency (as formalized by Abadi's PACELC theorem)."
+      },
+      {
+        "q": "What is the operational difference between p95, p99, and p99.9 latency in SLA monitoring?",
+        "a": "While p50 represents the typical user experience, p99.9 represents the slowest 1 in 1,000 requests. In modern microservice fan-out architectures where one client request triggers 100 internal RPCs, a high p99 latency directly degrades 63% of all end-user requests."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-2-design-a-scalable-url-shortener-tinyurl",
+    "section": "system_design",
+    "title": "[Day 2] Design a Scalable URL Shortener (TinyURL)",
+    "orderIndex": 2,
+    "tags": [
+      "System Design",
+      "Day 2",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for 100M new URLs/month and 1B reads/day: Base62 encoding vs MD5 hash truncation, Key Generation Service (KGS), and Redis caching.\n\n### System Scale & Estimation\n- **Writes**: 100M URLs / month $\\approx 40\\text{ URLs/second}$ (Peak $\\approx 200\\text{ writes/s}$).\n- **Reads**: 1B URLs / month $\\approx 400\\text{ reads/second}$ (Peak $\\approx 2,000\\text{ reads/s}$).\n- **Read-to-Write Ratio**: 10:1 (Read heavy).\n- **Storage for 5 Years**: $100\\text{M} \\times 12 \\times 5 = 6\\text{ Billion URLs}$. At 500 bytes per record $\\approx 3\\text{ TB}$.\n\n### Key Generation Service (KGS) Architecture\nInstead of computing hashes at runtime (which causes hash collisions and requires DB lookups to resolve):\n1. An offline **Key Generation Service (KGS)** pre-generates 7-character unique alphanumeric strings using Base62 characters (`[a-zA-Z0-9]`).\n2. $62^7 \\approx 3.52\\text{ Trillion}$ combinations, plenty for 6 billion URLs.\n3. KGS stores pre-generated keys in two tables: `unused_keys` and `used_keys`.\n4. When a new short URL request arrives, the API Gateway pops an unused key from an in-memory buffer, eliminating locking and collision detection.\n\n### Read Path Optimization\n1. User requests `GET https://short.link/xyz789`.\n2. ALB routes to Application Server.\n3. Check **Redis Cache** (holds 20% of hot URLs via LRU eviction policy).\n4. If Cache Hit: Return `302 Found` (or `301 Moved Permanently`) with `Location: original_url`.\n5. If Cache Miss: Query PostgreSQL / Cassandra, populate Redis, and return redirect.\n\n### Bottlenecks & Critical Trade-offs\nReturning HTTP 301 caches the redirect in the user browser (saving server bandwidth on future clicks), but HTTP 302 forces requests to hit the server, allowing precise real-time analytics and click tracking.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Base62 encoding preferred over Base64 for URL shorteners?",
+        "a": "Base64 includes characters \"+\" and \"/\" which have reserved meanings in URL query strings and path segments, requiring URL-escaping (%2B, %2F). Base62 uses only alphanumeric characters [0-9a-zA-Z], which are safe across all HTTP clients and browsers."
+      },
+      {
+        "q": "How do you prevent single points of failure in the Key Generation Service?",
+        "a": "KGS runs in active-standby instances with pre-assigned key ranges (e.g. Server 1 dispenses keys with IDs ending in 0-4, Server 2 dispenses 5-9) or uses ZooKeeper/Raft to lease token ranges to workers."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-3-design-a-distributed-rate-limiter",
+    "section": "system_design",
+    "title": "[Day 3] Design a Distributed Rate Limiter",
+    "orderIndex": 3,
+    "tags": [
+      "System Design",
+      "Day 3",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for high-throughput API rate limiting: Token Bucket, Leaky Bucket, Sliding Window Log vs Sliding Window Counter, and Redis Lua scripts.\n\n### Rate Limiting Algorithms Comparison\n\n1. **Token Bucket**: Tokens added at constant rate $R$. Bursts allowed up to bucket capacity $B$. Simple memory footprint (2 numbers: tokens, lastTimestamp).\n2. **Leaky Bucket**: Requests enter queue and leak out at constant rate. Smooths out traffic, but drops requests during spikes.\n3. **Sliding Window Log**: Stores timestamps in Redis Sorted Set (ZSET). Accurately calculates count within $[now - window, now]$. High memory consumption.\n4. **Sliding Window Counter**: Combines counters from current and previous windows:\n   $$Count = Count_{current} + Count_{prev} \\times \\left(1 - \\frac{elapsed}{window}\\right)$$\n   Extremely memory efficient (stores only 2 integers) and gives 99.9% accuracy.\n\n### Distributed Redis Architecture\n- Use **Redis Cluster** partitioned by `user_id` or `ip_address`.\n- Execute rate check atomically using an embedded **Lua script** to prevent Race Conditions (read-modify-write hazard):\n```lua\nlocal key = KEYS[1]\nlocal limit = tonumber(ARGV[1])\nlocal current = redis.call('GET', key)\nif current and tonumber(current) >= limit then\n    return 0\nelse\n    redis.call('INCR', key)\n    if not current then redis.call('EXPIRE', key, 60) end\n    return 1\nend\n```\n\n### Bottlenecks & Critical Trade-offs\nCentralized Redis provides exact global limit enforcement across all app nodes, but adds a 1ms network hop per request. Local in-memory rate limiting has 0ms network latency, but allows $N \\times limit$ requests across $N$ servers.",
+    "interviewQuestions": [
+      {
+        "q": "How do you handle rate limiter failure in a mission-critical payment API?",
+        "a": "Implement a fail-open circuit breaker. If the Redis rate limiter cluster becomes unreachable or times out (>10ms), the API Gateway logs an alert and allows legitimate traffic through rather than causing total service outage."
+      },
+      {
+        "q": "What HTTP response headers should a rate limiter return?",
+        "a": "X-RateLimit-Limit (max requests allowed in period), X-RateLimit-Remaining (remaining count), and X-RateLimit-Reset (Unix epoch timestamp when window resets), returning HTTP status 429 Too Many Requests."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-4-design-a-scalable-web-crawler",
+    "section": "system_design",
+    "title": "[Day 4] Design a Scalable Web Crawler",
+    "orderIndex": 4,
+    "tags": [
+      "System Design",
+      "Day 4",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for scraping 1B web pages/month: URL Frontier, politeness policies, MurmurHash deduplication, and Bloom filters.\n\n### High-Level Architecture\n1. **URL Frontier**: Manages queued URLs with priority queues and politeness delay per domain.\n2. **DNS Resolver Cache**: Local DNS cache to avoid resolving domain names on every fetch.\n3. **HTML Fetcher**: Asynchronous HTTP client (e.g. Go goroutines / epoll) respecting `robots.txt`.\n4. **Content Deduplication**: Compute 64-bit SimHash of rendered DOM; query Bloom filter to skip identical pages.\n5. **URL Extractor**: Parses internal links, canonicalizes relative paths, and adds new links to frontier.\n\n### Bottlenecks & Critical Trade-offs\nPoliteness vs Crawl Throughput: Strict per-host rate limits (e.g. max 1 request/sec per host) protect target web servers from DDoS, but require sharding the crawler across millions of distinct domains to maintain high aggregate throughput.",
+    "interviewQuestions": [
+      {
+        "q": "How do you detect duplicate web pages efficiently at scale?",
+        "a": "Compute a fingerprint of document content using SimHash or MurmurHash. Check against a distributed Bloom Filter or Redis Bitfield before storing the document in S3."
+      },
+      {
+        "q": "How does the URL Frontier maintain host politeness?",
+        "a": "Use a two-tier queue design: Priority Queues sort URLs by importance, while FIFO Politeness Queues enforce that requests to the same host IP have a minimum elapsed delay."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-5-design-a-notification-service-at-scale",
+    "section": "system_design",
+    "title": "[Day 5] Design a Notification Service at Scale",
+    "orderIndex": 5,
+    "tags": [
+      "System Design",
+      "Day 5",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for 10M notifications/minute: Push, SMS, Email fanout, Kafka partitioning, and idempotent delivery.\n\n### Notification System Flow\n1. **API Gateway**: Validates payload and enqueues notification request.\n2. **Notification Service**: Validates user notification preferences (DND hours, opt-outs).\n3. **Message Queue (Kafka)**: Partitioned by `user_id` to guarantee in-order delivery.\n4. **Workers**: Worker pools interface with third-party providers (APNs for iOS, FCM for Android, Twilio for SMS, SendGrid for Email).\n5. **Dead-Letter Queue (DLQ)**: Failed deliveries after exponential backoff retries are enqueued for manual inspection.\n\n### Bottlenecks & Critical Trade-offs\nAt-least-once delivery with idempotency keys is preferred over exactly-once delivery, because exactly-once across external third-party push gateways (Apple APNs) is physically impossible without two-phase commit.",
+    "interviewQuestions": [
+      {
+        "q": "How do you guarantee idempotency in mobile push notifications?",
+        "a": "Assign each event a unique `event_id`. Workers check Redis `SETNX idempotency:event_id 1` with a 24-hour TTL before sending the push payload."
+      },
+      {
+        "q": "How do you prevent third-party provider outages from bringing down the notification platform?",
+        "a": "Use circuit breakers (Resilience4j) and fallback providers (e.g. switch to AWS SNS if Twilio error rate exceeds 5%)."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-6-design-a-distributed-key-value-store",
+    "section": "system_design",
+    "title": "[Day 6] Design a Distributed Key-Value Store",
+    "orderIndex": 6,
+    "tags": [
+      "System Design",
+      "Day 6",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture modeled after DynamoDB and Cassandra: Consistent Hashing, Vector Clocks, Quorum consensus (W+R>N), and Gossip protocol.\n\n### Core Components\n1. **Consistent Hash Ring**: Nodes mapped along a 360-degree virtual ring using MD5/MurmurHash. Virtual nodes ensure uniform key distribution across physical servers.\n2. **Replication Factor ($N$)**: Key stored on the coordinator node and the next $N-1$ clockwise successor nodes.\n3. **Tunable Quorum**: For strong consistency, configure $R + W > N$ (e.g. $N=3, R=2, W=2$).\n4. **Anti-Entropy**: Merkle trees compare replicas asynchronously to detect out-of-sync key ranges without transmitting full data over the network.\n\n### Bottlenecks & Critical Trade-offs\nChoosing $W=1, R=1$ maximizes throughput and minimizes latency, but sacrifices read consistency (allowing dirty/stale reads) until background anti-entropy repairs the replicas.",
+    "interviewQuestions": [
+      {
+        "q": "Why are Virtual Nodes essential in Consistent Hashing?",
+        "a": "Without virtual nodes, adding or removing a physical server can lead to non-uniform key distribution (hot spots). Virtual nodes (e.g. 256 per physical server) evenly distribute load across all available hardware."
+      },
+      {
+        "q": "What is the purpose of the Gossip Protocol in Dynamo-style stores?",
+        "a": "It is a decentralized failure-detection protocol where nodes exchange peer membership and heartbeat state every second, reaching consensus on cluster health without a central master."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-7-design-a-distributed-unique-id-generator",
+    "section": "system_design",
+    "title": "[Day 7] Design a Distributed Unique ID Generator",
+    "orderIndex": 7,
+    "tags": [
+      "System Design",
+      "Day 7",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Generating 64-bit globally unique, roughly time-sorted IDs at 100,000 IDs/second: Twitter Snowflake architecture and clock drift mitigation.\n\n### Snowflake 64-bit ID Layout\n- **1 bit**: Unused sign bit (always 0).\n- **41 bits**: Timestamp in milliseconds since custom epoch ($2^{41} \\approx 69\\text{ years}$).\n- **10 bits**: Machine ID / Worker ID ($2^{10} = 1,024\\text{ worker nodes}$).\n- **12 bits**: Sequence number per worker ($2^{12} = 4,096\\text{ IDs/ms per worker node}$).\n- **Capacity**: $1,024 \\times 4,096 = 4.19\\text{ Million unique IDs/second}$.\n\n### Clock Drift & NTP Jumps\nIf the server's local clock synchronizes backwards via NTP:\n1. Detect condition: If `currentTimestamp < lastTimestamp`, refuse to generate IDs.\n2. Sleep until clock catches up or throw an exception to fail over to a healthy standby node.\n\n### Bottlenecks & Critical Trade-offs\nUUIDv4 provides decentralized generation without worker coordination, but its 128-bit random size causes severe B+ Tree index fragmentation in relational databases compared to time-ordered 64-bit Snowflake IDs.",
+    "interviewQuestions": [
+      {
+        "q": "Why are 64-bit time-ordered IDs preferred over UUIDv4 for database primary keys?",
+        "a": "UUIDv4 values are completely random, causing inserts into clustered B+ Tree indexes to require random disk page writes and constant page splits. Time-ordered Snowflake IDs append sequentially to the rightmost leaf page."
+      },
+      {
+        "q": "How does Snowflake resolve sequence number overflow in the same millisecond?",
+        "a": "If a worker receives more than 4,096 requests within a single millisecond, it busy-spins until the next millisecond before issuing the next ID."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-8-design-pastebin-text-storage-system",
+    "section": "system_design",
+    "title": "[Day 8] Design Pastebin / Text Storage System",
+    "orderIndex": 8,
+    "tags": [
+      "System Design",
+      "Day 8",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for 10M pastes/day: Object Storage (S3), Metadata DB in PostgreSQL/DynamoDB, Pre-signed URLs, and TTL-based background purge.\n\n### Architecture Flow\n1. **Write Request**: Client uploads text paste $\\rightarrow$ API Gateway generates unique 8-character ID.\n2. **Blob Storage**: Text content stored in Amazon S3 / Google Cloud Storage partitioned by `hash_prefix/id`.\n3. **Metadata Storage**: Save metadata (size, author, expiryTimestamp, S3URL) in DynamoDB.\n4. **Read Path**: Fetch from Redis Cache first; on miss, fetch from S3 and write through to Redis.\n5. **Purge Cron**: DynamoDB TTL feature automatically deletes expired metadata records; S3 Lifecycle Policies expire objects after $N$ days.\n\n### Bottlenecks & Critical Trade-offs\nStoring raw text in relational database BLOB columns creates massive database table bloat and slows down index scans. Separating metadata (DB) from text blobs (S3) achieves infinite linear scalability.",
+    "interviewQuestions": [
+      {
+        "q": "How do you handle expired pastes without overloading the primary database with DELETE queries?",
+        "a": "Use lazy deletion (check expiry timestamp on read) combined with storage lifecycle rules or database TTL features that handle background purging asynchronously."
+      },
+      {
+        "q": "How do you prevent malicious users from uploading spam or malware to Pastebin?",
+        "a": "Run an asynchronous worker pipeline that consumes newly created paste IDs from Kafka, scans content via machine-learning moderation APIs, and flags or deletes violating records."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-9-design-a-distributed-message-queue-apache-kafka",
+    "section": "system_design",
+    "title": "[Day 9] Design a Distributed Message Queue (Apache Kafka)",
+    "orderIndex": 9,
+    "tags": [
+      "System Design",
+      "Day 9",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture of high-throughput log-based message queues: Topics, Partitions, Consumer Groups, Zero-Copy (sendfile), and ISR replication.\n\n### Kafka Architecture Fundamentals\n1. **Topic & Partitions**: A topic is sharded into append-only partitions distributed across brokers. Partitions enable horizontal parallelism.\n2. **Zero-Copy Architecture**: Kafka uses Linux `sendfile()` system call to transfer byte buffers directly from the OS page cache to the network socket descriptor, bypassing user-space copying.\n3. **Consumer Groups**: Multiple consumers share a group ID; each partition is consumed by exactly one consumer within the group.\n4. **In-Sync Replicas (ISR)**: The leader replica only acknowledges a message after all replicas in the ISR have written it to their local append-only log.\n\n### Bottlenecks & Critical Trade-offs\nKafka guarantees total ordering only within a single partition, not across multiple partitions. To achieve global ordering, a topic must use a single partition, limiting throughput to a single machine.",
+    "interviewQuestions": [
+      {
+        "q": "How does Kafka achieve millions of messages per second on standard commodity hardware?",
+        "a": "Through sequential disk I/O (which rivals random memory access speed), heavy reliance on the OS Page Cache, batching messages, and zero-copy data transfer via Linux sendfile()."
+      },
+      {
+        "q": "What is the difference between at-least-once, at-most-once, and exactly-once processing in Kafka?",
+        "a": "At-most-once commits offsets before processing; at-least-once commits offsets after successful processing (retries may cause duplicates); exactly-once uses Kafka transactional APIs to coordinate writes to both destination topics and consumer offsets atomically."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-10-design-a-real-time-chat-system-whatsapp-slack",
+    "section": "system_design",
+    "title": "[Day 10] Design a Real-Time Chat System (WhatsApp / Slack)",
+    "orderIndex": 10,
+    "tags": [
+      "System Design",
+      "Day 10",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Architecture for 100M daily active users: WebSocket Gateway, Redis Pub/Sub, Cassandra message store, and user presence heartbeat engine.\n\n### Real-Time Chat Architecture\n1. **WebSocket Gateway**: Maintains persistent, bidirectional TCP connections with active mobile/web clients.\n2. **Session Service**: Maps `user_id \\rightarrow gateway_server_id` in Redis.\n3. **Chat Service**: Handles message routing. When Alice messages Bob:\n   - Queries Session Service for Bob's active gateway node.\n   - If online: Routes message via internal Redis Pub/Sub or gRPC to Bob's gateway.\n   - If offline: Sends push notification via APNs/FCM and marks as unread.\n4. **Message Store (Apache Cassandra)**: High-write throughput NoSQL with partition key `chat_id` and clustering key `timestamp DESC`.\n\n### Bottlenecks & Critical Trade-offs\nWebSocket connections require stateful servers, making horizontal auto-scaling and zero-downtime rolling deploys complex due to the need for client reconnection logic and connection draining.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Apache Cassandra preferred over PostgreSQL for chat message storage?",
+        "a": "Cassandra offers linear horizontal write scaling, append-optimized LSM-tree storage, and native partition key clustering that allows fetching the latest 50 messages of a conversation in a single contiguous disk read."
+      },
+      {
+        "q": "How do you design a reliable User Presence (Online/Offline) system at scale?",
+        "a": "Clients send a heartbeat ping every 5 seconds over the WebSocket. The server updates a key in Redis with a 15-second TTL. If no heartbeat arrives, the key expires, marking the user offline."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-11-design-a-video-streaming-platform-youtubenetflix",
+    "section": "system_design",
+    "title": "[Day 11] Design a Video Streaming Platform (YouTube/Netflix)",
+    "orderIndex": 11,
+    "tags": [
+      "System Design",
+      "Day 11",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Video Streaming Platform (YouTube/Netflix): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Video Streaming Platform (YouTube/Netflix)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Video Streaming Platform (YouTube/Netflix) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Video Streaming Platform (YouTube/Netflix)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-12-design-a-content-delivery-network-cdn",
+    "section": "system_design",
+    "title": "[Day 12] Design a Content Delivery Network (CDN)",
+    "orderIndex": 12,
+    "tags": [
+      "System Design",
+      "Day 12",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Content Delivery Network (CDN): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Content Delivery Network (CDN)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Content Delivery Network (CDN) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Content Delivery Network (CDN)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-13-design-a-distributed-file-system-gfshdfs",
+    "section": "system_design",
+    "title": "[Day 13] Design a Distributed File System (GFS/HDFS)",
+    "orderIndex": 13,
+    "tags": [
+      "System Design",
+      "Day 13",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Distributed File System (GFS/HDFS): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Distributed File System (GFS/HDFS)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed File System (GFS/HDFS) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed File System (GFS/HDFS)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-14-design-a-search-autocomplete-system-trie-at-scale",
+    "section": "system_design",
+    "title": "[Day 14] Design a Search Autocomplete System (Trie at Scale)",
+    "orderIndex": 14,
+    "tags": [
+      "System Design",
+      "Day 14",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Search Autocomplete System (Trie at Scale): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Search Autocomplete System (Trie at Scale)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Search Autocomplete System (Trie at Scale) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Search Autocomplete System (Trie at Scale)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-15-design-a-proximity-service-nearby-places-yelpgoogle-maps",
+    "section": "system_design",
+    "title": "[Day 15] Design a Proximity Service / Nearby Places (Yelp/Google Maps)",
+    "orderIndex": 15,
+    "tags": [
+      "System Design",
+      "Day 15",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Proximity Service / Nearby Places (Yelp/Google Maps): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Proximity Service / Nearby Places (Yelp/Google Maps)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Proximity Service / Nearby Places (Yelp/Google Maps) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Proximity Service / Nearby Places (Yelp/Google Maps)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-16-design-a-ride-sharing-dispatch-system-uberlyft",
+    "section": "system_design",
+    "title": "[Day 16] Design a Ride-Sharing Dispatch System (Uber/Lyft)",
+    "orderIndex": 16,
+    "tags": [
+      "System Design",
+      "Day 16",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Ride-Sharing Dispatch System (Uber/Lyft): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Ride-Sharing Dispatch System (Uber/Lyft)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Ride-Sharing Dispatch System (Uber/Lyft) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Ride-Sharing Dispatch System (Uber/Lyft)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-17-design-a-social-media-news-feed-twitterinstagram",
+    "section": "system_design",
+    "title": "[Day 17] Design a Social Media News Feed (Twitter/Instagram)",
+    "orderIndex": 17,
+    "tags": [
+      "System Design",
+      "Day 17",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Social Media News Feed (Twitter/Instagram): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Social Media News Feed (Twitter/Instagram)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Social Media News Feed (Twitter/Instagram) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Social Media News Feed (Twitter/Instagram)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-18-design-a-payment-gateway-double-entry-ledger",
+    "section": "system_design",
+    "title": "[Day 18] Design a Payment Gateway & Double-Entry Ledger",
+    "orderIndex": 18,
+    "tags": [
+      "System Design",
+      "Day 18",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Payment Gateway & Double-Entry Ledger: component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Payment Gateway & Double-Entry Ledger\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Payment Gateway & Double-Entry Ledger at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Payment Gateway & Double-Entry Ledger?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-19-design-a-web-scale-metrics-monitoring-system-datadog",
+    "section": "system_design",
+    "title": "[Day 19] Design a Web-Scale Metrics & Monitoring System (Datadog)",
+    "orderIndex": 19,
+    "tags": [
+      "System Design",
+      "Day 19",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Web-Scale Metrics & Monitoring System (Datadog): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Web-Scale Metrics & Monitoring System (Datadog)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Web-Scale Metrics & Monitoring System (Datadog) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Web-Scale Metrics & Monitoring System (Datadog)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-20-design-a-distributed-web-search-engine-pagerank",
+    "section": "system_design",
+    "title": "[Day 20] Design a Distributed Web Search Engine & PageRank",
+    "orderIndex": 20,
+    "tags": [
+      "System Design",
+      "Day 20",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Distributed Web Search Engine & PageRank: component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Distributed Web Search Engine & PageRank\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Web Search Engine & PageRank at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Web Search Engine & PageRank?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-21-design-a-live-streaming-interactive-chat-system-twitch",
+    "section": "system_design",
+    "title": "[Day 21] Design a Live Streaming & Interactive Chat System (Twitch)",
+    "orderIndex": 21,
+    "tags": [
+      "System Design",
+      "Day 21",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Live Streaming & Interactive Chat System (Twitch): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Live Streaming & Interactive Chat System (Twitch)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Live Streaming & Interactive Chat System (Twitch) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Live Streaming & Interactive Chat System (Twitch)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-22-design-a-distributed-job-scheduler-quartz-celery",
+    "section": "system_design",
+    "title": "[Day 22] Design a Distributed Job Scheduler (Quartz / Celery)",
+    "orderIndex": 22,
+    "tags": [
+      "System Design",
+      "Day 22",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Distributed Job Scheduler (Quartz / Celery): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Distributed Job Scheduler (Quartz / Celery)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Job Scheduler (Quartz / Celery) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Job Scheduler (Quartz / Celery)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-23-design-a-real-time-collaborative-document-editor-google-docs",
+    "section": "system_design",
+    "title": "[Day 23] Design a Real-Time Collaborative Document Editor (Google Docs)",
+    "orderIndex": 23,
+    "tags": [
+      "System Design",
+      "Day 23",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Real-Time Collaborative Document Editor (Google Docs): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Real-Time Collaborative Document Editor (Google Docs)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Real-Time Collaborative Document Editor (Google Docs) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Real-Time Collaborative Document Editor (Google Docs)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-24-design-an-e-commerce-flash-sale-platform-amazon-prime-day",
+    "section": "system_design",
+    "title": "[Day 24] Design an E-Commerce Flash Sale Platform (Amazon Prime Day)",
+    "orderIndex": 24,
+    "tags": [
+      "System Design",
+      "Day 24",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design an E-Commerce Flash Sale Platform (Amazon Prime Day): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design an E-Commerce Flash Sale Platform (Amazon Prime Day)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design an E-Commerce Flash Sale Platform (Amazon Prime Day) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design an E-Commerce Flash Sale Platform (Amazon Prime Day)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-25-design-cloud-object-storage-service-amazon-s3",
+    "section": "system_design",
+    "title": "[Day 25] Design Cloud Object Storage Service (Amazon S3)",
+    "orderIndex": 25,
+    "tags": [
+      "System Design",
+      "Day 25",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design Cloud Object Storage Service (Amazon S3): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design Cloud Object Storage Service (Amazon S3)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design Cloud Object Storage Service (Amazon S3) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design Cloud Object Storage Service (Amazon S3)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-26-design-a-distributed-logging-architecture-elk-loki",
+    "section": "system_design",
+    "title": "[Day 26] Design a Distributed Logging Architecture (ELK / Loki)",
+    "orderIndex": 26,
+    "tags": [
+      "System Design",
+      "Day 26",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Distributed Logging Architecture (ELK / Loki): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Distributed Logging Architecture (ELK / Loki)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Logging Architecture (ELK / Loki) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Logging Architecture (ELK / Loki)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-27-design-a-real-time-recommendation-engine-tiktokyoutube",
+    "section": "system_design",
+    "title": "[Day 27] Design a Real-Time Recommendation Engine (TikTok/YouTube)",
+    "orderIndex": 27,
+    "tags": [
+      "System Design",
+      "Day 27",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Real-Time Recommendation Engine (TikTok/YouTube): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Real-Time Recommendation Engine (TikTok/YouTube)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Real-Time Recommendation Engine (TikTok/YouTube) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Real-Time Recommendation Engine (TikTok/YouTube)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-28-design-an-ultra-low-latency-stock-trading-platform-lmax",
+    "section": "system_design",
+    "title": "[Day 28] Design an Ultra-Low Latency Stock Trading Platform (LMAX)",
+    "orderIndex": 28,
+    "tags": [
+      "System Design",
+      "Day 28",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design an Ultra-Low Latency Stock Trading Platform (LMAX): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design an Ultra-Low Latency Stock Trading Platform (LMAX)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design an Ultra-Low Latency Stock Trading Platform (LMAX) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design an Ultra-Low Latency Stock Trading Platform (LMAX)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-29-design-a-distributed-caching-system-redis-cluster",
+    "section": "system_design",
+    "title": "[Day 29] Design a Distributed Caching System (Redis Cluster)",
+    "orderIndex": 29,
+    "tags": [
+      "System Design",
+      "Day 29",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Distributed Caching System (Redis Cluster): component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Distributed Caching System (Redis Cluster)\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Distributed Caching System (Redis Cluster) at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Distributed Caching System (Redis Cluster)?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "system_design/day-30-design-a-multi-region-global-active-active-architecture",
+    "section": "system_design",
+    "title": "[Day 30] Design a Multi-Region Global Active-Active Architecture",
+    "orderIndex": 30,
+    "tags": [
+      "System Design",
+      "Day 30",
+      "Scalability"
+    ],
+    "readTimeMinutes": 9,
+    "content": "Production system architecture for Design a Multi-Region Global Active-Active Architecture: component breakdown, scale estimations, bottlenecks, and fault tolerance.\n\n### High-Level Architecture for Design a Multi-Region Global Active-Active Architecture\n1. **Edge Tier**: Global Anycast DNS and CDN edge caching to terminate TLS near clients.\n2. **Load Balancing & Gateway**: API Gateway handles authentication, rate limiting, and request routing.\n3. **Application Services**: Horizontally scaled stateless services running in Kubernetes pods.\n4. **Distributed Storage & Caching**: Multi-tier caching with Redis Cluster backed by horizontally partitioned databases.\n5. **Asynchronous Processing**: Kafka message streaming for event-driven decoupled workflows.\n\n### Bottlenecks & Critical Trade-offs\nChoosing between strong consistency and low-latency availability based on business requirements.",
+    "interviewQuestions": [
+      {
+        "q": "What is the single biggest bottleneck in Design a Multi-Region Global Active-Active Architecture at 10x scale?",
+        "a": "Database write IOPS and cross-datacenter replication latency. Mitigated by sharding, write-batching, and asynchronous read replicas."
+      },
+      {
+        "q": "How do you ensure zero-downtime deployments for Design a Multi-Region Global Active-Active Architecture?",
+        "a": "Use blue-green or canary deployments with automatic rollback on elevated 5xx error rates or p99 latency regressions."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-1-arrays-hash-maps",
+    "section": "dsa",
+    "title": "Day 1: Arrays & Hash Maps Master Notes",
+    "orderIndex": 1,
+    "tags": [
+      "DSA",
+      "Day 1",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 1: Arrays & Hash Maps\n\nMastering O(1) key-value lookups, frequency maps, prefix frequency, and avoiding O(N^2) nested loops.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Arrays & Hash Maps?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-2-two-pointers",
+    "section": "dsa",
+    "title": "Day 2: Two Pointers Master Notes",
+    "orderIndex": 2,
+    "tags": [
+      "DSA",
+      "Day 2",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 2: Two Pointers\n\nConverging and parallel pointers for sorted arrays, palindrome validation, and in-place partition.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Two Pointers?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-3-sliding-window",
+    "section": "dsa",
+    "title": "Day 3: Sliding Window Master Notes",
+    "orderIndex": 3,
+    "tags": [
+      "DSA",
+      "Day 3",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 3: Sliding Window\n\nFixed-size vs dynamic-size window mechanics, window state maintenance, and optimal subarray problems.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Sliding Window?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-4-prefix-sums-difference-arrays",
+    "section": "dsa",
+    "title": "Day 4: Prefix Sums & Difference Arrays Master Notes",
+    "orderIndex": 4,
+    "tags": [
+      "DSA",
+      "Day 4",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 4: Prefix Sums & Difference Arrays\n\nRange sum queries in O(1), running sum hash map lookups, and range increment difference arrays.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Prefix Sums & Difference Arrays?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-5-binary-search-on-arrays",
+    "section": "dsa",
+    "title": "Day 5: Binary Search on Arrays Master Notes",
+    "orderIndex": 5,
+    "tags": [
+      "DSA",
+      "Day 5",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 5: Binary Search on Arrays\n\nExact search, lower bound, upper bound, and rotated sorted arrays without boundary off-by-one errors.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Binary Search on Arrays?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-6-binary-search-on-answer-space",
+    "section": "dsa",
+    "title": "Day 6: Binary Search on Answer Space Master Notes",
+    "orderIndex": 6,
+    "tags": [
+      "DSA",
+      "Day 6",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 6: Binary Search on Answer Space\n\nMonotonic condition functions: searching over min/max possible capacities and allocation limits.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Binary Search on Answer Space?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-7-bit-manipulation-fast-math",
+    "section": "dsa",
+    "title": "Day 7: Bit Manipulation & Fast Math Master Notes",
+    "orderIndex": 7,
+    "tags": [
+      "DSA",
+      "Day 7",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 7: Bit Manipulation & Fast Math\n\nXOR properties, bit masks, power-of-two checks, fast exponentiation, and competitive programming fast I/O.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Bit Manipulation & Fast Math?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-8-stacks-monotonic-stack",
+    "section": "dsa",
+    "title": "Day 8: Stacks & Monotonic Stack Master Notes",
+    "orderIndex": 8,
+    "tags": [
+      "DSA",
+      "Day 8",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 8: Stacks & Monotonic Stack\n\nLIFO mechanics, parenthesis parsing, and monotonic stacks for Next Greater Element and largest area.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Stacks & Monotonic Stack?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-9-queues-monotonic-deque",
+    "section": "dsa",
+    "title": "Day 9: Queues & Monotonic Deque Master Notes",
+    "orderIndex": 9,
+    "tags": [
+      "DSA",
+      "Day 9",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 9: Queues & Monotonic Deque\n\nFIFO ordering, BFS queues, and sliding window maximum using monotonic double-ended queues.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Queues & Monotonic Deque?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-10-linked-list-patterns",
+    "section": "dsa",
+    "title": "Day 10: Linked List Patterns Master Notes",
+    "orderIndex": 10,
+    "tags": [
+      "DSA",
+      "Day 10",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 10: Linked List Patterns\n\nFast and slow pointer cycle detection, pointer reversal, and dummy head nodes.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Linked List Patterns?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-11-recursion-backtracking",
+    "section": "dsa",
+    "title": "Day 11: Recursion & Backtracking Master Notes",
+    "orderIndex": 11,
+    "tags": [
+      "DSA",
+      "Day 11",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 11: Recursion & Backtracking\n\nDecision trees, subset generation, permutations, and pruning dead branches.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Recursion & Backtracking?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-12-binary-trees-dfs-paths",
+    "section": "dsa",
+    "title": "Day 12: Binary Trees: DFS & Paths Master Notes",
+    "orderIndex": 12,
+    "tags": [
+      "DSA",
+      "Day 12",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 12: Binary Trees: DFS & Paths\n\nPre-order, in-order, post-order DFS traversals, max depth, diameter, and path sum tracking.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Binary Trees: DFS & Paths?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-13-binary-trees-bfs-views",
+    "section": "dsa",
+    "title": "Day 13: Binary Trees: BFS & Views Master Notes",
+    "orderIndex": 13,
+    "tags": [
+      "DSA",
+      "Day 13",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 13: Binary Trees: BFS & Views\n\nLevel-order traversals using queues, zigzag traversal, and tree boundary views.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Binary Trees: BFS & Views?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-14-binary-search-trees-bst",
+    "section": "dsa",
+    "title": "Day 14: Binary Search Trees (BST) Master Notes",
+    "orderIndex": 14,
+    "tags": [
+      "DSA",
+      "Day 14",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 14: Binary Search Trees (BST)\n\nBST invariants, in-order sorted traversal, BST validation, and lowest common ancestor (LCA).\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Binary Search Trees (BST)?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-15-heaps-priority-queues",
+    "section": "dsa",
+    "title": "Day 15: Heaps & Priority Queues Master Notes",
+    "orderIndex": 15,
+    "tags": [
+      "DSA",
+      "Day 15",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 15: Heaps & Priority Queues\n\nBinary heaps, Top-K frequent elements, and Two Heaps pattern for running median.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Heaps & Priority Queues?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-16-greedy-algorithms",
+    "section": "dsa",
+    "title": "Day 16: Greedy Algorithms Master Notes",
+    "orderIndex": 16,
+    "tags": [
+      "DSA",
+      "Day 16",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 16: Greedy Algorithms\n\nLocal optimal choice leading to global optimum: interval scheduling, jump game, and gas station.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Greedy Algorithms?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-17-dynamic-programming-1d-basics",
+    "section": "dsa",
+    "title": "Day 17: Dynamic Programming: 1D Basics Master Notes",
+    "orderIndex": 17,
+    "tags": [
+      "DSA",
+      "Day 17",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 17: Dynamic Programming: 1D Basics\n\nMemoization vs tabulation, subproblem recurrence, Climbing Stairs, and House Robber.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Dynamic Programming: 1D Basics?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-18-dynamic-programming-state-machine",
+    "section": "dsa",
+    "title": "Day 18: Dynamic Programming: State Machine Master Notes",
+    "orderIndex": 18,
+    "tags": [
+      "DSA",
+      "Day 18",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 18: Dynamic Programming: State Machine\n\nTransitions with multiple states: Coin Change and Longest Increasing Subsequence (O(N^2) to O(N log N)).\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Dynamic Programming: State Machine?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-19-dynamic-programming-2d-grids",
+    "section": "dsa",
+    "title": "Day 19: Dynamic Programming: 2D Grids Master Notes",
+    "orderIndex": 19,
+    "tags": [
+      "DSA",
+      "Day 19",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 19: Dynamic Programming: 2D Grids\n\nDirectional transitions in matrices: Unique Paths, Minimum Path Sum, and Dungeon Game.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Dynamic Programming: 2D Grids?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-20-dynamic-programming-knapsack",
+    "section": "dsa",
+    "title": "Day 20: Dynamic Programming: Knapsack Master Notes",
+    "orderIndex": 20,
+    "tags": [
+      "DSA",
+      "Day 20",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 20: Dynamic Programming: Knapsack\n\n0/1 Knapsack, Partition Equal Subset Sum, and Unbounded Knapsack combinations.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Dynamic Programming: Knapsack?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-21-dynamic-programming-strings",
+    "section": "dsa",
+    "title": "Day 21: Dynamic Programming: Strings Master Notes",
+    "orderIndex": 21,
+    "tags": [
+      "DSA",
+      "Day 21",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 21: Dynamic Programming: Strings\n\nLongest Common Subsequence (LCS), Edit Distance, and Palindromic Substrings.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Dynamic Programming: Strings?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-22-graph-fundamentals-bfs-dfs",
+    "section": "dsa",
+    "title": "Day 22: Graph Fundamentals: BFS & DFS Master Notes",
+    "orderIndex": 22,
+    "tags": [
+      "DSA",
+      "Day 22",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 22: Graph Fundamentals: BFS & DFS\n\nAdjacency lists, cycle detection in undirected graphs, and connected components.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Graph Fundamentals: BFS & DFS?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-23-matrix-as-graph",
+    "section": "dsa",
+    "title": "Day 23: Matrix as Graph Master Notes",
+    "orderIndex": 23,
+    "tags": [
+      "DSA",
+      "Day 23",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 23: Matrix as Graph\n\nGrid flood fill, Number of Islands, Rotting Oranges (multi-source BFS), and Surrounded Regions.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Matrix as Graph?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-24-topological-sort-dags",
+    "section": "dsa",
+    "title": "Day 24: Topological Sort & DAGs Master Notes",
+    "orderIndex": 24,
+    "tags": [
+      "DSA",
+      "Day 24",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 24: Topological Sort & DAGs\n\nKahn's algorithm (indegree queue), cycle detection in directed graphs, and Course Schedule.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Topological Sort & DAGs?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-25-shortest-path-dijkstra",
+    "section": "dsa",
+    "title": "Day 25: Shortest Path: Dijkstra Master Notes",
+    "orderIndex": 25,
+    "tags": [
+      "DSA",
+      "Day 25",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 25: Shortest Path: Dijkstra\n\nSingle-source shortest path with non-negative edge weights using Priority Queue.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Shortest Path: Dijkstra?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-26-disjoint-set-union-dsu",
+    "section": "dsa",
+    "title": "Day 26: Disjoint Set Union (DSU) Master Notes",
+    "orderIndex": 26,
+    "tags": [
+      "DSA",
+      "Day 26",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 26: Disjoint Set Union (DSU)\n\nFind with path compression, union by rank, Redundant Connection, and Kruskal's MST.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Disjoint Set Union (DSU)?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-27-tries-prefix-trees",
+    "section": "dsa",
+    "title": "Day 27: Tries (Prefix Trees) Master Notes",
+    "orderIndex": 27,
+    "tags": [
+      "DSA",
+      "Day 27",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 27: Tries (Prefix Trees)\n\nPrefix tree insertions, searches, auto-complete, and bitwise XOR tries.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Tries (Prefix Trees)?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-28-intervals-sweep-line",
+    "section": "dsa",
+    "title": "Day 28: Intervals & Sweep Line Master Notes",
+    "orderIndex": 28,
+    "tags": [
+      "DSA",
+      "Day 28",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 28: Intervals & Sweep Line\n\nMerge Intervals, Non-overlapping intervals, Meeting Rooms, and coordinate event sorting.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Intervals & Sweep Line?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-29-string-matching-rolling-hash",
+    "section": "dsa",
+    "title": "Day 29: String Matching & Rolling Hash Master Notes",
+    "orderIndex": 29,
+    "tags": [
+      "DSA",
+      "Day 29",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 29: String Matching & Rolling Hash\n\nRabin-Karp rolling hash, handling hash collisions, and KMP prefix functions.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for String Matching & Rolling Hash?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  },
+  {
+    "slug": "dsa/day-30-grand-integration-review",
+    "section": "dsa",
+    "title": "Day 30: Grand Integration & Review Master Notes",
+    "orderIndex": 30,
+    "tags": [
+      "DSA",
+      "Day 30",
+      "Complexity Invariants"
+    ],
+    "readTimeMinutes": 6,
+    "content": "### Curriculum Overview for Day 30: Grand Integration & Review\n\nCulmination day: multi-pattern interview problems, system trade-offs, and final preparation checklist.\n\n### Target Complexity & Invariants\n- Expected Time Complexity: Amortized $\\mathcal{O}(1)$ to $\\mathcal{O}(N)$ optimal bounds.\n- Space Complexity: Auxiliary $\\mathcal{O}(1)$ or minimal buffer overhead.\n- Key Invariant: Maintain two-pointer / window / prefix invariant without violating array bounds.",
+    "interviewQuestions": [
+      {
+        "q": "What is the optimal pattern for Grand Integration & Review?",
+        "a": "Always analyze bounds and identify monotonicity, hash table trade-offs, or invariant maintenance before writing code."
+      }
+    ]
+  }
+]

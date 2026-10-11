@@ -1,0 +1,582 @@
+[
+  {
+    "id": "cs_mcq_1",
+    "dayId": "cs_fundamentals",
+    "topic": "Virtual Memory & Paging",
+    "question": "What exactly happens in hardware and the OS kernel when a CPU experiences a 'Page Fault'?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "The CPU halts permanently with a kernel panic."
+      },
+      {
+        "key": "B",
+        "text": "The MMU triggers an interrupt; the OS trap handler checks validity, allocates a physical RAM frame, reads the page from disk swap/backing store into RAM, updates the page table entry, and restarts the instruction."
+      },
+      {
+        "key": "C",
+        "text": "The program memory is cleared and restarted from main()."
+      },
+      {
+        "key": "D",
+        "text": "The cache controller resets the L1 cache."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. When the CPU attempts to access a virtual address whose valid bit in the page table is 0, the MMU fires a page fault exception. The OS kernel handles the trap, checks if the address is within the process's allocated virtual space, finds an empty physical frame (or evicts via clock/LRU), loads the page from disk, marks it valid, and rewinds the instruction pointer to re-execute.",
+    "difficulty": "medium",
+    "orderIndex": 1
+  },
+  {
+    "id": "cs_mcq_2",
+    "dayId": "cs_fundamentals",
+    "topic": "Synchronization Primitives",
+    "question": "What is the critical distinction between a 'Mutex' and a 'Binary Semaphore'?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "A Semaphore is written in C++, while a Mutex is written in Assembly."
+      },
+      {
+        "key": "B",
+        "text": "Ownership: A Mutex has strict ownership (only the thread that locked the mutex can unlock it), whereas a Semaphore has no ownership and can be signaled (unlocked) by any thread."
+      },
+      {
+        "key": "C",
+        "text": "A Mutex allows up to 2 threads, whereas a Semaphore allows 1."
+      },
+      {
+        "key": "D",
+        "text": "Semaphores cannot be used in multi-threaded programs."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A Mutex is a locking mechanism with strict thread ownership: if Thread A locks a mutex, Thread B cannot unlock it. A Binary Semaphore is a signaling mechanism (counter of 0 or 1): Thread A can wait for an event while Thread B signals (posts) the semaphore to release it.",
+    "difficulty": "medium",
+    "orderIndex": 2
+  },
+  {
+    "id": "cs_mcq_3",
+    "dayId": "cs_fundamentals",
+    "topic": "CPU Scheduling",
+    "question": "What is 'Priority Inversion' and how does the 'Priority Inheritance Protocol' resolve it in real-time operating systems?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "High priority tasks are deleted by low priority tasks; resolved by deleting all priorities."
+      },
+      {
+        "key": "B",
+        "text": "A high-priority task is blocked waiting for a lock held by a low-priority task, while medium-priority tasks starve both; resolved by temporarily boosting the low-priority task's priority to match the high-priority task."
+      },
+      {
+        "key": "C",
+        "text": "Round-robin scheduling fails when quantum is small."
+      },
+      {
+        "key": "D",
+        "text": "Threads execute in reverse alphabetical order."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. If Low (L) holds a shared mutex, High (H) blocks waiting for it. Medium (M) tasks (which do not need the mutex) preempt L, preventing L from finishing and indirectly blocking H indefinitely! Priority Inheritance elevates L's priority to H's level while L holds the mutex, preventing M from preempting L until the lock is released.",
+    "difficulty": "hard",
+    "orderIndex": 3
+  },
+  {
+    "id": "cs_mcq_4",
+    "dayId": "cs_fundamentals",
+    "topic": "Memory Allocation",
+    "question": "Why is stack memory allocation much faster than heap memory allocation?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Stack allocation requires searching a free list, while heap does not."
+      },
+      {
+        "key": "B",
+        "text": "Stack allocation merely increments or decrements the CPU stack pointer register (RSP), while heap allocation requires traversing memory fragmentation free lists and OS syscalls."
+      },
+      {
+        "key": "C",
+        "text": "Stack memory is stored directly on GPU registers."
+      },
+      {
+        "key": "D",
+        "text": "Heap memory does not support pointers."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Allocating on the stack is a single CPU instruction: `sub rsp, bytes`. Deallocation is `add rsp, bytes`. Heap allocation (`malloc` / `new`) must search bins/free-lists for suitably sized chunks, manage bookkeeping headers, handle locks in multi-threaded allocators, and invoke `brk` or `mmap` syscalls.",
+    "difficulty": "easy",
+    "orderIndex": 4
+  },
+  {
+    "id": "cs_mcq_5",
+    "dayId": "cs_fundamentals",
+    "topic": "Spinlock vs Mutex",
+    "question": "When is a 'Spinlock' preferred over a standard blocking 'Mutex' in kernel programming?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "On single-core CPUs where waiting takes several minutes."
+      },
+      {
+        "key": "B",
+        "text": "On multi-core systems when the lock is held for only a few instructions (sub-microsecond), where CPU spin cycles cost less than the overhead of a thread context switch and sleep."
+      },
+      {
+        "key": "C",
+        "text": "When disk I/O operations are occurring inside the lock."
+      },
+      {
+        "key": "D",
+        "text": "Spinlocks are never used in modern operating systems."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A mutex puts a waiting thread to sleep, which incurs the cost of two context switches (sleeping and waking: typically ~1–5 microseconds). If a lock is held for just a few nanoseconds (e.g. updating an atomic pointer), a busy-waiting spinlock consumes fewer CPU cycles than sleeping.",
+    "difficulty": "medium",
+    "orderIndex": 5
+  },
+  {
+    "id": "cs_mcq_6",
+    "dayId": "cs_fundamentals",
+    "topic": "Inter-Process Communication",
+    "question": "Which Inter-Process Communication (IPC) mechanism provides the highest throughput and lowest latency?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Unix Domain Sockets"
+      },
+      {
+        "key": "B",
+        "text": "Pipes and Named FIFOs"
+      },
+      {
+        "key": "C",
+        "text": "Shared Memory (shm_open / mmap) because processes access the same physical RAM frames with zero kernel copying"
+      },
+      {
+        "key": "D",
+        "text": "Message Queues"
+      }
+    ],
+    "correctOption": "C",
+    "detailedExplanation": "Correct: C. Pipes, sockets, and message queues require copying data from user space to kernel space buffer, and then from kernel buffer to the receiving user space (2 context copies). Shared memory maps the same physical memory frames into the virtual address spaces of both processes, eliminating data copies entirely.",
+    "difficulty": "medium",
+    "orderIndex": 6
+  },
+  {
+    "id": "cs_mcq_7",
+    "dayId": "cs_fundamentals",
+    "topic": "B+ Tree Indexing",
+    "question": "Why do relational databases (MySQL InnoDB, Postgres) use B+ Trees instead of standard B-Trees or Binary Search Trees for disk indexing?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "B+ Trees store data records only in leaf nodes connected by a linked list, maximizing fan-out in internal nodes and making range scans O(leaves) rather than tree traversals."
+      },
+      {
+        "key": "B",
+        "text": "Binary search trees have higher fan-out on disk."
+      },
+      {
+        "key": "C",
+        "text": "B+ Trees do not require rebalancing."
+      },
+      {
+        "key": "D",
+        "text": "B+ Trees use less RAM than linear arrays."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In B+ Trees, internal nodes only store navigation keys and pointers, allowing a single 16KB disk page to hold hundreds of child pointers (fan-out of 100+). Leaf nodes hold all data records and are linked in a bidirectional sequential list, allowing range queries (`WHERE age BETWEEN 20 AND 30`) to seek once and scan sequentially.",
+    "difficulty": "medium",
+    "orderIndex": 7
+  },
+  {
+    "id": "cs_mcq_8",
+    "dayId": "cs_fundamentals",
+    "topic": "Clustered vs Secondary Index",
+    "question": "In MySQL InnoDB, what is the fundamental structural difference between a Clustered Index and a Secondary (Non-Clustered) Index?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Clustered index stores only primary keys; secondary stores table data."
+      },
+      {
+        "key": "B",
+        "text": "The leaf pages of a Clustered Index contain the complete actual row data; the leaf pages of a Secondary Index contain only the indexed column and the primary key pointer (requiring a secondary lookup / bookmark seek)."
+      },
+      {
+        "key": "C",
+        "text": "A table can have multiple clustered indexes."
+      },
+      {
+        "key": "D",
+        "text": "Secondary indexes cannot be used for WHERE clauses."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A table can have only ONE clustered index because it dictates the physical on-disk sorting of table rows (usually the Primary Key). Secondary indexes store index keys and the corresponding Primary Key value. When a query queries via secondary index, it traverses the secondary tree and then performs a 'bookmark lookup' on the clustered tree.",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "cs_mcq_9",
+    "dayId": "cs_fundamentals",
+    "topic": "Database Joins Algorithms",
+    "question": "When joining two large tables with equality predicate `WHERE A.id = B.id` without existing indexes, what is the optimal join strategy chosen by query optimizers?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Nested Loop Join with O(N * M) complexity."
+      },
+      {
+        "key": "B",
+        "text": "Hash Join: builds an in-memory hash table on the smaller relation, then streams the larger relation to probe matches in O(N + M) time."
+      },
+      {
+        "key": "C",
+        "text": "Cartesian Cross Product."
+      },
+      {
+        "key": "D",
+        "text": "Bubble sort join."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Nested Loop Join takes O(N * M) disk scans. Hash Join reads the smaller table into a hash table in memory (Build phase) in O(N) time, and then scans the second table (Probe phase) looking up matching keys in O(1) average time. Total complexity is O(N + M).",
+    "difficulty": "medium",
+    "orderIndex": 9
+  },
+  {
+    "id": "cs_mcq_10",
+    "dayId": "cs_fundamentals",
+    "topic": "Database Normalization",
+    "question": "What is the defining requirement for a database table to satisfy Third Normal Form (3NF)?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "It must be in 2NF and have no transitive functional dependencies (non-key attributes must depend solely on the candidate key: 'the key, the whole key, and nothing but the key')."
+      },
+      {
+        "key": "B",
+        "text": "It must contain at least three foreign keys."
+      },
+      {
+        "key": "C",
+        "text": "All columns must be strings."
+      },
+      {
+        "key": "D",
+        "text": "Primary keys must be auto-incrementing integers."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. 1NF eliminates duplicate columns and requires atomic values. 2NF requires 1NF and no partial dependencies (no non-key attribute depends on part of a composite key). 3NF requires 2NF and eliminates transitive dependencies: if X -> Y and Y -> Z, Z must not be in the table unless Y is a candidate key.",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "cs_mcq_11",
+    "dayId": "cs_fundamentals",
+    "topic": "Two-Phase Locking (2PL)",
+    "question": "How does Strict Two-Phase Locking (Strict 2PL) prevent Cascading Aborts in concurrent transaction execution?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "By disallowing all SELECT queries."
+      },
+      {
+        "key": "B",
+        "text": "By holding all exclusive (X) locks until the very end of the transaction (COMMIT or ROLLBACK) before releasing them."
+      },
+      {
+        "key": "C",
+        "text": "By releasing locks immediately after reading each row."
+      },
+      {
+        "key": "D",
+        "text": "By restarting the database server every hour."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In regular 2PL, locks can be released during the shrinking phase before commit. If Transaction T1 releases an exclusive lock on X and T2 reads X, and then T1 aborts, T2 has read dirty uncommitted data and must also abort (cascading abort). Strict 2PL holds exclusive locks until commit, guaranteeing uncommitted data is never read.",
+    "difficulty": "hard",
+    "orderIndex": 11
+  },
+  {
+    "id": "cs_mcq_12",
+    "dayId": "cs_fundamentals",
+    "topic": "DNS Resolution Flow",
+    "question": "What is the correct sequential order of DNS servers queried during a recursive resolution for `api.example.com`?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Authoritative Server -> TLD Server -> Root Server."
+      },
+      {
+        "key": "B",
+        "text": "Browser/OS Cache -> Recursive Resolver (ISP/8.8.8.8) -> Root Nameserver (.) -> Top-Level Domain (TLD) Server (.com) -> Authoritative Nameserver (example.com)."
+      },
+      {
+        "key": "C",
+        "text": "Gateway Router -> DHCP Server -> Proxy Server."
+      },
+      {
+        "key": "D",
+        "text": "Web Server -> Application Server -> Database Server."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. The client checks local caches (browser, OS, router). If missed, query goes to the Recursive Resolver. The resolver asks Root (.) which returns .com TLD addresses; asks TLD (.com) which returns example.com's Authoritative servers; asks Authoritative server which returns the final IP A/AAAA record.",
+    "difficulty": "easy",
+    "orderIndex": 12
+  },
+  {
+    "id": "cs_mcq_13",
+    "dayId": "cs_fundamentals",
+    "topic": "TLS 1.3 vs TLS 1.2",
+    "question": "What is the primary latency improvement of TLS 1.3 over TLS 1.2 during session establishment?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "TLS 1.3 reduces the cryptographic handshake from 2 Round-Trip Times (2-RTT) to 1 Round-Trip Time (1-RTT), and supports 0-RTT resumption."
+      },
+      {
+        "key": "B",
+        "text": "TLS 1.3 removes public key encryption."
+      },
+      {
+        "key": "C",
+        "text": "TLS 1.3 switches from TCP to raw Ethernet frames."
+      },
+      {
+        "key": "D",
+        "text": "TLS 1.3 eliminates certificates."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. In TLS 1.2, negotiating cipher suites, key exchange, and authentication required 2 round-trips before application data could be transmitted. TLS 1.3 combines key share generation into the initial ClientHello, completing the handshake in a single round-trip (1-RTT), and allows returning clients to send early encrypted data in 0-RTT.",
+    "difficulty": "medium",
+    "orderIndex": 13
+  },
+  {
+    "id": "cs_mcq_14",
+    "dayId": "cs_fundamentals",
+    "topic": "TCP Congestion Control",
+    "question": "What event triggers TCP 'Fast Retransmit' without waiting for the retransmission timeout (RTO) timer to expire?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Arrival of a single FIN packet."
+      },
+      {
+        "key": "B",
+        "text": "Receipt of 3 Duplicate ACKs (total 4 identical ACKs) for the same sequence number from the receiver."
+      },
+      {
+        "key": "C",
+        "text": "DNS cache invalidation."
+      },
+      {
+        "key": "D",
+        "text": "TTL dropping to zero."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. When out-of-order packets arrive, the receiver sends duplicate ACKs indicating the last in-order byte received. If 3 duplicate ACKs arrive, the sender infers a single packet was lost in transit and immediately retransmits the missing segment (Fast Retransmit) without waiting for the lengthy RTO timeout.",
+    "difficulty": "medium",
+    "orderIndex": 14
+  },
+  {
+    "id": "cs_mcq_15",
+    "dayId": "cs_fundamentals",
+    "topic": "NAT & Port Forwarding",
+    "question": "How does Network Address Translation (NAPT / PAT) allow hundreds of home devices with private IPs (192.168.x.x) to share a single public IPv4 address simultaneously?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "By assigning each device a temporary MAC address."
+      },
+      {
+        "key": "B",
+        "text": "By tracking a translation table that maps each internal private IP and source port to the router's public IP and a unique external port number."
+      },
+      {
+        "key": "C",
+        "text": "By rotating public IP addresses every second."
+      },
+      {
+        "key": "D",
+        "text": "By converting IPv4 to IPv6."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Port Address Translation (PAT) rewrites outgoing IP packets: changing source IP `192.168.1.5:54321` to `203.0.113.1:10001` and logging this in its state table. When return packets arrive at port `10001`, the router inspects the table and rewrites the destination to `192.168.1.5:54321`.",
+    "difficulty": "easy",
+    "orderIndex": 15
+  },
+  {
+    "id": "cs_mcq_16",
+    "dayId": "cs_fundamentals",
+    "topic": "HTTP/1.1 vs HTTP/2",
+    "question": "What core architectural feature of HTTP/2 solved the problem of opening multiple concurrent TCP connections per domain in HTTP/1.1?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "HTTP/2 uses UDP instead of TCP."
+      },
+      {
+        "key": "B",
+        "text": "Binary framing and Multiplexing: interleaving multiple independent bidirectional request/response streams over a single shared TCP connection."
+      },
+      {
+        "key": "C",
+        "text": "HTTP/2 eliminates JSON payloads."
+      },
+      {
+        "key": "D",
+        "text": "HTTP/2 removed cookies."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In HTTP/1.1, browsers opened up to 6 parallel TCP connections per host because each connection could only process one request-response cycle at a time (pipelining was broken). HTTP/2 splits messages into binary frames tagged with a stream ID, allowing hundreds of concurrent requests over a single TCP connection.",
+    "difficulty": "medium",
+    "orderIndex": 16
+  },
+  {
+    "id": "cs_mcq_17",
+    "dayId": "cs_fundamentals",
+    "topic": "SOLID Principles: Liskov Substitution",
+    "question": "According to the Liskov Substitution Principle (LSP), which of the following represents a classic violation?",
+    "codeSnippet": "class Rectangle {\n  void setWidth(int w) { ... }\n  void setHeight(int h) { ... }\n}\nclass Square extends Rectangle { ... }",
+    "options": [
+      {
+        "key": "A",
+        "text": "A Circle class extending a Shape class."
+      },
+      {
+        "key": "B",
+        "text": "Square extending Rectangle where setting width modifies height to maintain squareness, breaking caller expectations that width and height vary independently."
+      },
+      {
+        "key": "C",
+        "text": "Using private variables with public getters and setters."
+      },
+      {
+        "key": "D",
+        "text": "Implementing multiple interfaces in Java."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. LSP states that subtype objects must be substitutable for supertype objects without altering program correctness. A caller passing a `Rectangle` might assert that `setWidth(5)` followed by `setHeight(10)` yields an area of 50. If `Square` overrides both to set sides equally, the area becomes 100, violating behavioral subtyping.",
+    "difficulty": "medium",
+    "orderIndex": 17
+  },
+  {
+    "id": "cs_mcq_18",
+    "dayId": "cs_fundamentals",
+    "topic": "SOLID: Dependency Inversion",
+    "question": "What is the core premise of the Dependency Inversion Principle (DIP) in SOLID?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "High-level modules should not depend on low-level modules; both should depend on abstractions (interfaces). Abstractions should not depend on details; details should depend on abstractions."
+      },
+      {
+        "key": "B",
+        "text": "Classes should have only one reason to change."
+      },
+      {
+        "key": "C",
+        "text": "Child classes must override all methods of their parent."
+      },
+      {
+        "key": "D",
+        "text": "Code should avoid using interfaces."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. Instead of an OrderService directly instantiating a concrete MySQLDatabase (`new MySQLDatabase()`), OrderService depends on a `PaymentGateway` or `DatabaseRepository` interface. Concrete implementations are injected at runtime via Dependency Injection (DI), decoupling business logic from infrastructure.",
+    "difficulty": "easy",
+    "orderIndex": 18
+  },
+  {
+    "id": "cs_mcq_19",
+    "dayId": "cs_fundamentals",
+    "topic": "Singleton Pattern & Double-Checked Locking",
+    "question": "In Java, why must the singleton instance variable be declared `volatile` when using Double-Checked Locking?",
+    "codeSnippet": "private static volatile Singleton instance;\nif (instance == null) {\n  synchronized (Singleton.class) {\n    if (instance == null) instance = new Singleton();\n  }\n}",
+    "options": [
+      {
+        "key": "A",
+        "text": "To prevent garbage collection of the singleton instance."
+      },
+      {
+        "key": "B",
+        "text": "To prevent instruction reordering by the compiler/CPU where memory allocation and pointer assignment occur before constructor execution, which could expose a partially constructed object to another thread."
+      },
+      {
+        "key": "C",
+        "text": "To convert the object into a primitive type."
+      },
+      {
+        "key": "D",
+        "text": "Because synchronized cannot work without volatile."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. `new Singleton()` involves 3 steps: (1) allocate memory, (2) run constructor, (3) assign memory address to `instance`. Without `volatile`, the CPU can reorder steps (2) and (3). Another thread checking the outer `if (instance != null)` could see a non-null instance whose constructor hasn't finished, leading to catastrophic crashes.",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "cs_mcq_20",
+    "dayId": "cs_fundamentals",
+    "topic": "Composition vs Inheritance",
+    "question": "Why does the design heuristic 'Favor Composition Over Inheritance' exist in modern software engineering?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Composition runs in O(1) time while inheritance runs in O(N)."
+      },
+      {
+        "key": "B",
+        "text": "Inheritance creates tight compile-time coupling (fragile base class problem where modifying parent breaks subclasses), while composition enables flexible runtime behavioral changes via dependency injection."
+      },
+      {
+        "key": "C",
+        "text": "Inheritance is prohibited in Java and C++."
+      },
+      {
+        "key": "D",
+        "text": "Composition consumes zero heap memory."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Inheritance exposes subclass code to parent implementation details (white-box reuse). If the superclass changes internal method calls, subclasses often break silently. Composition (has-a) treats components as black boxes through interfaces, allowing behaviors to be swapped at runtime.",
+    "difficulty": "easy",
+    "orderIndex": 20
+  }
+]

@@ -1,0 +1,243 @@
+[
+  {
+    "id": "day_1",
+    "number": 1,
+    "theme": "Arrays & Hash Maps",
+    "summary": "Mastering O(1) key-value lookups, frequency maps, prefix frequency, and avoiding O(N^2) nested loops.",
+    "strictOrder": 1,
+    "problemIds": ["lc_1", "lc_217", "lc_49", "cf_1850A", "cf_158B"]
+  },
+  {
+    "id": "day_2",
+    "number": 2,
+    "theme": "Two Pointers",
+    "summary": "Converging and parallel pointers for sorted arrays, palindrome validation, and in-place partition.",
+    "strictOrder": 2,
+    "problemIds": ["lc_125", "lc_167", "lc_15", "cf_1462A", "cf_1352C"]
+  },
+  {
+    "id": "day_3",
+    "number": 3,
+    "theme": "Sliding Window",
+    "summary": "Fixed-size vs dynamic-size window mechanics, window state maintenance, and optimal subarray problems.",
+    "strictOrder": 3,
+    "problemIds": ["lc_643", "lc_3", "lc_76", "cf_1354B", "cf_1360D"]
+  },
+  {
+    "id": "day_4",
+    "number": 4,
+    "theme": "Prefix Sums & Difference Arrays",
+    "summary": "Range sum queries in O(1), running sum hash map lookups, and range increment difference arrays.",
+    "strictOrder": 4,
+    "problemIds": ["lc_303", "lc_560", "lc_238", "cf_1398C", "cf_1343C"]
+  },
+  {
+    "id": "day_5",
+    "number": 5,
+    "theme": "Binary Search on Arrays",
+    "summary": "Exact search, lower bound, upper bound, and rotated sorted arrays without boundary off-by-one errors.",
+    "strictOrder": 5,
+    "problemIds": ["lc_704", "lc_34", "lc_33", "cf_1619C", "cf_1138A"]
+  },
+  {
+    "id": "day_6",
+    "number": 6,
+    "theme": "Binary Search on Answer Space",
+    "summary": "Monotonic condition functions: searching over min/max possible capacities and allocation limits.",
+    "strictOrder": 6,
+    "problemIds": ["lc_875", "lc_1011", "lc_410", "cf_1201C", "cf_1409C"]
+  },
+  {
+    "id": "day_7",
+    "number": 7,
+    "theme": "Bit Manipulation & Fast Math",
+    "summary": "XOR properties, bit masks, power-of-two checks, fast exponentiation, and competitive programming fast I/O.",
+    "strictOrder": 7,
+    "problemIds": ["lc_136", "lc_191", "lc_268", "cf_1594B", "cf_1426B"]
+  },
+  {
+    "id": "day_8",
+    "number": 8,
+    "theme": "Stacks & Monotonic Stack",
+    "summary": "LIFO mechanics, parenthesis parsing, and monotonic stacks for Next Greater Element and largest area.",
+    "strictOrder": 8,
+    "problemIds": ["lc_20", "lc_739", "lc_84", "cf_1551B1", "cf_1328B"]
+  },
+  {
+    "id": "day_9",
+    "number": 9,
+    "theme": "Queues & Monotonic Deque",
+    "summary": "FIFO ordering, BFS queues, and sliding window maximum using monotonic double-ended queues.",
+    "strictOrder": 9,
+    "problemIds": ["lc_225", "lc_239", "lc_622", "cf_1624B", "cf_1472B"]
+  },
+  {
+    "id": "day_10",
+    "number": 10,
+    "theme": "Linked List Patterns",
+    "summary": "Fast and slow pointer cycle detection, pointer reversal, and dummy head nodes.",
+    "strictOrder": 10,
+    "problemIds": ["lc_206", "lc_141", "lc_142", "cf_1367B", "cf_1374C"]
+  },
+  {
+    "id": "day_11",
+    "number": 11,
+    "theme": "Recursion & Backtracking",
+    "summary": "Decision trees, subset generation, permutations, and pruning dead branches.",
+    "strictOrder": 11,
+    "problemIds": ["lc_78", "lc_46", "lc_39", "cf_1433C", "cf_1335C"]
+  },
+  {
+    "id": "day_12",
+    "number": 12,
+    "theme": "Binary Trees: DFS & Paths",
+    "summary": "Pre-order, in-order, post-order DFS traversals, max depth, diameter, and path sum tracking.",
+    "strictOrder": 12,
+    "problemIds": ["lc_104", "lc_543", "lc_124", "cf_1490C", "cf_1385C"]
+  },
+  {
+    "id": "day_13",
+    "number": 13,
+    "theme": "Binary Trees: BFS & Views",
+    "summary": "Level-order traversals using queues, zigzag traversal, and tree boundary views.",
+    "strictOrder": 13,
+    "problemIds": ["lc_102", "lc_103", "lc_199", "cf_1520C", "cf_1360C"]
+  },
+  {
+    "id": "day_14",
+    "number": 14,
+    "theme": "Binary Search Trees (BST)",
+    "summary": "BST invariants, in-order sorted traversal, BST validation, and lowest common ancestor (LCA).",
+    "strictOrder": 14,
+    "problemIds": ["lc_98", "lc_235", "lc_230", "cf_1547C", "cf_1475C"]
+  },
+  {
+    "id": "day_15",
+    "number": 15,
+    "theme": "Heaps & Priority Queues",
+    "summary": "Binary heaps, Top-K frequent elements, and Two Heaps pattern for running median.",
+    "strictOrder": 15,
+    "problemIds": ["lc_215", "lc_347", "lc_295", "cf_1538C", "cf_1418A"]
+  },
+  {
+    "id": "day_16",
+    "number": 16,
+    "theme": "Greedy Algorithms",
+    "summary": "Local optimal choice leading to global optimum: interval scheduling, jump game, and gas station.",
+    "strictOrder": 16,
+    "problemIds": ["lc_55", "lc_45", "lc_134", "cf_1557A", "cf_1476A"]
+  },
+  {
+    "id": "day_17",
+    "number": 17,
+    "theme": "Dynamic Programming: 1D Basics",
+    "summary": "Memoization vs tabulation, subproblem recurrence, Climbing Stairs, and House Robber.",
+    "strictOrder": 17,
+    "problemIds": ["lc_70", "lc_198", "lc_213", "cf_1512D", "cf_1490B"]
+  },
+  {
+    "id": "day_18",
+    "number": 18,
+    "theme": "Dynamic Programming: State Machine",
+    "summary": "Transitions with multiple states: Coin Change and Longest Increasing Subsequence (O(N^2) to O(N log N)).",
+    "strictOrder": 18,
+    "problemIds": ["lc_322", "lc_300", "lc_139", "cf_1553B", "cf_1462D"]
+  },
+  {
+    "id": "day_19",
+    "number": 19,
+    "theme": "Dynamic Programming: 2D Grids",
+    "summary": "Directional transitions in matrices: Unique Paths, Minimum Path Sum, and Dungeon Game.",
+    "strictOrder": 19,
+    "problemIds": ["lc_62", "lc_64", "lc_174", "cf_1520D", "cf_1409B"]
+  },
+  {
+    "id": "day_20",
+    "number": 20,
+    "theme": "Dynamic Programming: Knapsack",
+    "summary": "0/1 Knapsack, Partition Equal Subset Sum, and Unbounded Knapsack combinations.",
+    "strictOrder": 20,
+    "problemIds": ["lc_416", "lc_494", "lc_518", "cf_1551C", "cf_1353D"]
+  },
+  {
+    "id": "day_21",
+    "number": 21,
+    "theme": "Dynamic Programming: Strings",
+    "summary": "Longest Common Subsequence (LCS), Edit Distance, and Palindromic Substrings.",
+    "strictOrder": 21,
+    "problemIds": ["lc_1143", "lc_72", "lc_5", "cf_1537C", "cf_1430C"]
+  },
+  {
+    "id": "day_22",
+    "number": 22,
+    "theme": "Graph Fundamentals: BFS & DFS",
+    "summary": "Adjacency lists, cycle detection in undirected graphs, and connected components.",
+    "strictOrder": 22,
+    "problemIds": ["lc_133", "lc_261", "lc_323", "cf_1527B1", "cf_1487B"]
+  },
+  {
+    "id": "day_23",
+    "number": 23,
+    "theme": "Matrix as Graph",
+    "summary": "Grid flood fill, Number of Islands, Rotting Oranges (multi-source BFS), and Surrounded Regions.",
+    "strictOrder": 23,
+    "problemIds": ["lc_200", "lc_994", "lc_130", "cf_1519C", "cf_1492B"]
+  },
+  {
+    "id": "day_24",
+    "number": 24,
+    "theme": "Topological Sort & DAGs",
+    "summary": "Kahn's algorithm (indegree queue), cycle detection in directed graphs, and Course Schedule.",
+    "strictOrder": 24,
+    "problemIds": ["lc_207", "lc_210", "lc_310", "cf_1559C", "cf_1454D"]
+  },
+  {
+    "id": "day_25",
+    "number": 25,
+    "theme": "Shortest Path: Dijkstra",
+    "summary": "Single-source shortest path with non-negative edge weights using Priority Queue.",
+    "strictOrder": 25,
+    "problemIds": ["lc_743", "lc_787", "lc_1514", "cf_1555C", "cf_1472D"]
+  },
+  {
+    "id": "day_26",
+    "number": 26,
+    "theme": "Disjoint Set Union (DSU)",
+    "summary": "Find with path compression, union by rank, Redundant Connection, and Kruskal's MST.",
+    "strictOrder": 26,
+    "problemIds": ["lc_684", "lc_128", "lc_1584", "cf_1535C", "cf_1468C"]
+  },
+  {
+    "id": "day_27",
+    "number": 27,
+    "theme": "Tries (Prefix Trees)",
+    "summary": "Prefix tree insertions, searches, auto-complete, and bitwise XOR tries.",
+    "strictOrder": 27,
+    "problemIds": ["lc_208", "lc_211", "lc_421", "cf_1526C1", "cf_1433D"]
+  },
+  {
+    "id": "day_28",
+    "number": 28,
+    "theme": "Intervals & Sweep Line",
+    "summary": "Merge Intervals, Non-overlapping intervals, Meeting Rooms, and coordinate event sorting.",
+    "strictOrder": 28,
+    "problemIds": ["lc_56", "lc_57", "lc_435", "cf_1549C", "cf_1469B"]
+  },
+  {
+    "id": "day_29",
+    "number": 29,
+    "theme": "String Matching & Rolling Hash",
+    "summary": "Rabin-Karp rolling hash, handling hash collisions, and KMP prefix functions.",
+    "strictOrder": 29,
+    "problemIds": ["lc_28", "lc_187", "lc_214", "cf_1538D", "cf_1471B"]
+  },
+  {
+    "id": "day_30",
+    "number": 30,
+    "theme": "Grand Integration & Review",
+    "summary": "Culmination day: multi-pattern interview problems, system trade-offs, and final preparation checklist.",
+    "strictOrder": 30,
+    "problemIds": ["lc_146", "lc_224", "lc_297", "cf_1551C", "cf_1520E"]
+  }
+]
+

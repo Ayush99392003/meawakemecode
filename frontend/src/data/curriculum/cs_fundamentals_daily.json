@@ -1,0 +1,602 @@
+[
+  {
+    "dayNumber": 1,
+    "dsaTheme": "Arrays & Hash Maps",
+    "title": "Virtual Memory, Address Translation & Page Faults",
+    "domain": "Operating Systems",
+    "summary": "How CPU MMU translates virtual addresses to physical RAM, TLB caching, page table hierarchies, and the precise anatomy of page faults and swap.",
+    "mentalModel": "Virtual memory isolates processes into identical 64-bit flat address spaces; the MMU and kernel map virtual pages (typically 4KB) to physical frames on demand.",
+    "details": "### Process Memory Hierarchy & Address Translation\n\nEvery modern OS (Linux, macOS, Windows) provides each user process with its own private virtual address space. On 64-bit x86_64 architectures, canonical addresses use 48 bits (256 TB user space), organized into standardized segments:\n\n1. **Text Segment (Code)**: Read-only, executable machine instructions.\n2. **Data & BSS Segments**: Initialized global/static variables (`.data`) and zero-initialized variables (`.bss`).\n3. **Heap**: Dynamically allocated memory via `brk` / `sbrk` or memory-mapped regions via `mmap`. Grows upwards towards higher memory addresses.\n4. **Memory Mapped Region**: Shared libraries (`libc.so`), shared memory blocks, and file backings.\n5. **Stack**: Thread execution frames, local variables, return addresses. Grows downwards.\n\n### The Page Fault Interrupt Lifecycle\n\nWhen the CPU attempts to dereference an address:\n1. **TLB Check**: The Translation Lookaside Buffer (L1 MMU cache) is queried for the Virtual Page Number (VPN). If cached (TLB Hit), translation takes $\\sim 1\\text{ ns}$.\n2. **Page Table Walk**: On a TLB Miss, hardware page table walkers traverse the multi-level page table (CR3 register $\\rightarrow$ PML4 $\\rightarrow$ PDPT $\\rightarrow$ PD $\\rightarrow$ PT).\n3. **Trap Handler Execution**: If the Valid/Present bit is 0, the CPU triggers Interrupt Vector 14 (`#PF` Page Fault Exception). The kernel receives the faulting address in register `CR2` and an error code.\n4. **Frame Allocation & Disk I/O**: If valid virtual memory, the kernel allocates a physical frame (from free page lists), fetches the disk block (from backing store or swap), updates the PTE, sets Present=1, and restarts the faulting instruction.",
+    "failureCase": "Major Page Fault Spikes in High-Throughput Java/Node.js servers: When physical RAM is exhausted and the Linux kernel starts swapping heap pages to disk, page fault latency jumps from nanoseconds to tens of milliseconds (disk I/O wait), causing sudden thread pool starvation and massive p99 latency spikes.",
+    "interviewQuestions": [
+      {
+        "q": "What is the exact distinction between a Minor (Soft) and Major (Hard) Page Fault?",
+        "a": "A minor page fault occurs when the target page is already in physical RAM (e.g. allocated by another process, or lazily mapped via copy-on-write during fork), requiring only a page table update without disk I/O. A major page fault requires blocking disk or swap I/O to read page bytes into physical memory."
+      },
+      {
+        "q": "Why do multi-level page tables save memory compared to a single flat page table?",
+        "a": "A single flat 64-bit page table would require petabytes just to store PTEs. Multi-level tables allow the OS to allocate page table directories lazily; unallocated or sparse virtual memory regions do not require inner page tables to be instantiated in physical RAM."
+      }
+    ]
+  },
+  {
+    "dayNumber": 2,
+    "dsaTheme": "Two Pointers",
+    "title": "Processes vs Threads: Memory, TCB/PCB & Context Switching",
+    "domain": "Operating Systems",
+    "summary": "Detailed internals of Linux task_struct, memory sharing between threads vs processes, clone() flags, and the cost of register saves and TLB flushes during context switching.",
+    "mentalModel": "A process is an isolated resource container (private page table, file descriptors, credentials); a thread is an execution unit (registers, program counter, private stack) sharing the process address space.",
+    "details": "### Process Control Block (PCB) vs Thread Control Block (TCB)\n\nIn the Linux kernel, both processes and threads are represented by the unified struct `task_struct`.\n- When creating a process via `fork()`, a copy-on-write duplicate of the page tables and file descriptor tables is generated.\n- When creating a thread via `pthread_create()` (which invokes `clone()` system call), flags `CLONE_VM`, `CLONE_FS`, `CLONE_FILES`, and `CLONE_SIGHAND` are passed, instructing the kernel to share the virtual memory pointer (`mm_struct`) and file table.\n\n### Anatomy of Context Switch Overhead\n1. **Thread Switch within Same Process**:\n   - Save CPU registers (rax, rbx, rsp, rip, etc.) into the outgoing thread's kernel stack/TCB.\n   - Restore register state from incoming thread's TCB.\n   - **Cost**: $\\sim 1 - 2\\;\\mu\\text{s}$. Memory translation tables (CR3 register) remain untouched.\n2. **Process Switch across Different Processes**:\n   - Save registers and change CPU stack pointer.\n   - Reload register `CR3` with the physical base address of the new process's PML4 page table.\n   - **Invalidation of TLB**: Changing CR3 invalidates non-global TLB entries. Subsequent memory reads incur major TLB misses, slowing instructions down for hundreds of cycles.\n   - **Cost**: $\\sim 3 - 10\\;\\mu\\text{s}$ direct overhead plus severe cache pollution.",
+    "failureCase": "Context-Switching Thrashing: Spawning 10,000 OS native threads in a web server causes the CPU to spend over 70% of clock cycles merely executing kernel scheduler context switches instead of servicing HTTP traffic, collapsing overall throughput.",
+    "interviewQuestions": [
+      {
+        "q": "Why do Goroutines or Kotlin Coroutines have less context switch overhead than OS threads?",
+        "a": "Coroutines run in user space (M:N scheduling model) with tiny initial stacks (~2KB vs ~2-8MB OS thread stack), and switching between them does not require a ring 0 kernel privilege transition or TLB flush."
+      },
+      {
+        "q": "What happens to child process file descriptors upon fork()?",
+        "a": "The child gets a copy of the parent's file descriptor table, but both descriptors point to the same underlying open file table entry in the kernel, sharing file offsets and read/write positions."
+      }
+    ]
+  },
+  {
+    "dayNumber": 3,
+    "dsaTheme": "Sliding Window",
+    "title": "CPU Scheduling Algorithms: CFS, Multilevel Feedback & Preemption",
+    "domain": "Operating Systems",
+    "summary": "Linux Completely Fair Scheduler (CFS), virtual runtime (vruntime), red-black tree task queues, nice values, and real-time scheduling classes (SCHED_FIFO/RR).",
+    "mentalModel": "CFS tracks each task's accumulated virtual runtime (vruntime); the task that has received the least CPU time is picked next from the leftmost node of a red-black tree.",
+    "details": "### Linux CFS Mechanics & vruntime\n\nIn Linux, the Completely Fair Scheduler (CFS) models an ideal multi-tasking CPU on hardware:\n1. **Virtual Runtime (`vruntime`)**: Measures the amount of CPU execution time a thread has consumed, scaled inversely by its priority (`nice` value from -20 to +19).\n   $$vruntime += \\Delta exec\\_time \\times \\frac{NICE\\_0\\_LOAD}{task\\_load}$$\n   High-priority tasks (negative nice) have large `task_load`, so their `vruntime` increases slowly, allowing them to run longer.\n2. **Red-Black Tree Runqueue**: Runnable tasks are sorted by `vruntime`. The CPU always selects the task with the smallest `vruntime` ($O(1)$ lookup via cached leftmost pointer).\n3. **Latency Target & Granularity**: `sysctl_sched_latency` defines the period during which all runnable tasks must run at least once. If too many tasks are runnable, `sysctl_sched_min_granularity` enforces a minimum timeslice (e.g. 0.75ms) to prevent context switch thrashing.",
+    "failureCase": "Nice-Level Inversion in Mixed Workloads: Running CPU-intensive batch jobs at normal priority alongside latency-sensitive web service threads without proper cgroup scheduling causes batch jobs to monopolize CPU timeslices, degrading API response times.",
+    "interviewQuestions": [
+      {
+        "q": "What is the purpose of the Completely Fair Scheduler (CFS) red-black tree leftmost pointer cache?",
+        "a": "Finding the task with the lowest vruntime in an RB-tree takes O(log N) time, but by caching the leftmost node during tree updates, selecting the next task to run is an O(1) operation."
+      },
+      {
+        "q": "How does CFS handle I/O-bound processes versus CPU-bound processes?",
+        "a": "I/O-bound processes spend most of their time blocked waiting for network or disk. Their vruntime remains stagnant while running processes advance. When an I/O-bound process wakes up, its vruntime is much lower than running tasks, giving it immediate preemption priority."
+      }
+    ]
+  },
+  {
+    "dayNumber": 4,
+    "dsaTheme": "Prefix Sums & Difference Arrays",
+    "title": "Synchronization Primitives: Mutex, Semaphores, Spinlocks & CAS",
+    "domain": "Operating Systems",
+    "summary": "Hardware atomic instructions (CMPXCHG), test-and-set, cache line bouncing, futex system call, and lock-free concurrency mechanics.",
+    "mentalModel": "Locks protect shared invariants; futex optimizes performance by spinning in user-space first and only invoking kernel sleep if contention persists.",
+    "details": "### Hardware Atomics & Compare-And-Swap (CAS)\nAt the hardware level, atomic operations rely on CPU cache coherency protocols (MESI/MOESI). An atomic instruction like `CMPXCHG` on x86 locks the cache line, guaranteeing that no other core can read or modify the cache line simultaneously.\n\n### The Linux Futex (Fast Userspace Mutex)\nTraditional POSIX mutexes required a system call into the kernel for every lock/unlock. The Linux `futex` splits the path:\n1. **Uncontended Case**: An atomic CAS operation updates an integer in user-space memory ($\\sim 10\\text{ ns}$). Zero kernel transitions.\n2. **Contended Case**: If CAS fails, the thread invokes `sys_futex(FUTEX_WAIT)`, placing the thread onto the kernel's wait queue to sleep until woken by `sys_futex(FUTEX_WAKE)`.",
+    "failureCase": "Priority Inversion Deadlock: A low-priority thread acquires a mutex; a high-priority thread preempts and spins waiting for the lock, but an intermediate priority thread keeps the low-priority thread from running, starving the high-priority thread.",
+    "interviewQuestions": [
+      {
+        "q": "When should a developer use a Spinlock instead of a Mutex?",
+        "a": "Spinlocks should only be used when the critical section is extremely short (< a few nanoseconds) and the thread is running on a multi-core CPU where sleeping and context switching would cost more than briefly spinning."
+      },
+      {
+        "q": "What is the ABA problem in lock-free CAS data structures?",
+        "a": "A memory location changes from A to B and back to A between the read and CAS phases, causing the CAS to succeed despite intermediate state mutations. Resolved using tagged pointers or version counters."
+      }
+    ]
+  },
+  {
+    "dayNumber": 5,
+    "dsaTheme": "Binary Search on Arrays",
+    "title": "Deadlocks: Coffman Conditions, Prevention & Banker's Algorithm",
+    "domain": "Operating Systems",
+    "summary": "The 4 necessary conditions for deadlock, resource allocation graphs, lock ordering protocols, and deadlock detection via cycle detection.",
+    "mentalModel": "Deadlock occurs if and only if all 4 Coffman conditions hold: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. Breaking any one condition guarantees deadlock freedom.",
+    "details": "### The 4 Coffman Conditions\n1. **Mutual Exclusion**: At least one resource must be held in non-shareable mode.\n2. **Hold and Wait**: A process holds at least one resource and requests additional resources held by other processes.\n3. **No Preemption**: Resources cannot be forcibly taken; only released voluntarily.\n4. **Circular Wait**: A closed chain of processes exists where each process holds a resource needed by the next.\n\n### Prevention: Strict Lock Ordering\nTo eliminate Circular Wait, assign a total ordering $\\mathcal{O}(L_i)$ to all locks in the system. Any thread acquiring multiple locks must acquire them in monotonically increasing order.",
+    "failureCase": "Database Deadlock in Payment Transfers: Transaction 1 updates Account A then Account B; Transaction 2 updates Account B then Account A simultaneously. Both block on row-level exclusive locks until the DBMS deadlock detector detects a cycle and aborts one transaction.",
+    "interviewQuestions": [
+      {
+        "q": "How does a relational database engine detect and resolve deadlocks?",
+        "a": "The engine maintains a Wait-For Graph (WFG) where nodes are transactions and directed edges represent lock waits. A background thread runs cycle detection; on finding a cycle, it rolls back the transaction with the lowest cost."
+      },
+      {
+        "q": "Why is Banker's Algorithm rarely used in general-purpose OS kernels?",
+        "a": "It requires processes to declare their maximum resource claims in advance, which is impossible in dynamic multi-tenant workloads."
+      }
+    ]
+  },
+  {
+    "dayNumber": 6,
+    "dsaTheme": "Binary Search on Answer Space",
+    "title": "File Systems, Inodes, VFS & Dirty Page Writeback",
+    "domain": "Operating Systems",
+    "summary": "Virtual File System (VFS), Inode data structures, dentry cache, page cache, direct I/O (O_DIRECT), and fsync durability semantics.",
+    "mentalModel": "An inode stores metadata and data block pointers, but not the file name. Directory entries (dentries) map file names to inode numbers in a tree hierarchy.",
+    "details": "### Inode Structure & Storage\nAn inode contains: file type, file permissions, owner UID/GID, file size, timestamps (atime, mtime, ctime), link count, and block pointers (direct blocks, indirect, double-indirect).\n\n### The Page Cache & fsync()\nWhen writing to a file via standard `write()`:\n1. The kernel copies data from the user buffer into the kernel **Page Cache** (RAM) and returns immediately ($O(1)$ latency).\n2. The page is marked as **Dirty**.\n3. Background kernel threads (`flusher` / `kswapd`) flush dirty pages to disk every `dirty_writeback_centisecs` (default 5s).\n4. If power fails before the flush, data is lost. Invoking `fsync(fd)` forces a hardware cache flush to persistent disk before returning.",
+    "failureCase": "Silent Data Loss in Log Engines: Writing transaction logs without calling `fdatasync()` results in completed database transactions being lost on sudden server kernel panics because logs resided only in volatile RAM page cache.",
+    "interviewQuestions": [
+      {
+        "q": "What is the difference between a Hard Link and a Symbolic (Soft) Link?",
+        "a": "A hard link is a new directory entry pointing directly to the existing inode number (increasing the link count). A symlink is an independent file containing the path string of the target file."
+      },
+      {
+        "q": "What does O_DIRECT flag do when opening a file in Linux?",
+        "a": "It bypasses the kernel page cache entirely, performing direct DMA transfers between user-space memory buffers and the storage controller, used by high-performance database storage engines."
+      }
+    ]
+  },
+  {
+    "dayNumber": 7,
+    "dsaTheme": "Bit Manipulation & Fast Math",
+    "title": "Inter-Process Communication (IPC): Unix Sockets, Shared Memory & Pipes",
+    "domain": "Operating Systems",
+    "summary": "Comparison of IPC primitives: Anonymous pipes, Named pipes (FIFOs), Unix Domain Sockets, POSIX Shared Memory (shm), and message queues.",
+    "mentalModel": "Shared memory is the fastest IPC because it avoids kernel memory copying; Unix Domain Sockets provide the best combination of security, stream abstractions, and file descriptor passing.",
+    "details": "### IPC Mechanisms & Throughput Comparison\n1. **Pipes / FIFOs**: Unidirectional byte stream mediated by a kernel buffer (default 64KB). Involves 2 memory copies (user $\\rightarrow$ kernel $\\rightarrow$ user).\n2. **Unix Domain Sockets (UDS)**: Bidirectional, packet or stream based. Supports sending credentials and open file descriptors (`SCM_RIGHTS`). Bypasses network routing and checksums.\n3. **Shared Memory (`shm_open`, `mmap`)**: Maps the same physical RAM frames into the virtual address spaces of two processes. Zero copies; requires synchronization primitives (semaphores/mutexes) to prevent race conditions.",
+    "failureCase": "Broken Pipe (SIGPIPE) Crashes: Writing to a pipe or socket whose reading process has terminated raises `SIGPIPE`. Without an explicit signal handler or `MSG_NOSIGNAL` flag, the writing process terminates abruptly.",
+    "interviewQuestions": [
+      {
+        "q": "Why is Shared Memory faster than Unix Domain Sockets?",
+        "a": "Shared memory allows processes to read and write directly to physical RAM without kernel intervention or data copying, whereas Unix Domain Sockets require copying data through kernel socket buffers."
+      },
+      {
+        "q": "What does SCM_RIGHTS allow over Unix Domain Sockets?",
+        "a": "It allows a process to pass an open file descriptor (e.g. an open network socket) directly to another process, enabling zero-downtime hot reloads in Nginx and Envoy."
+      }
+    ]
+  },
+  {
+    "dayNumber": 8,
+    "dsaTheme": "Stacks & Monotonic Stack",
+    "title": "OSI & TCP/IP Model: Encapsulation, MTU, MSS & Packet Headers",
+    "domain": "Computer Networks",
+    "summary": "Detailed walk from Application layer to Physical: Ethernet frames, IP headers, TCP headers, Maximum Transmission Unit (MTU), and fragmentation hazards.",
+    "mentalModel": "Networking is layered encapsulation: every layer wraps higher-layer data with its own header containing routing and protocol metadata.",
+    "details": "### Header Overhead & Encapsulation\n1. **Ethernet Layer (Data Link)**: 14-byte header (Src MAC, Dst MAC, EtherType) + 4-byte CRC checksum. Standard MTU = 1,500 bytes.\n2. **IPv4 Layer (Network)**: 20-byte base header (Src IP, Dst IP, TTL, Protocol, Total Length).\n3. **TCP Layer (Transport)**: 20-byte base header (Src Port, Dst Port, Seq Number, Ack Number, Flags, Window Size).\n4. **Maximum Segment Size (MSS)**:\n   $$MSS = MTU - (IP\\_Header + TCP\\_Header) = 1500 - (20 + 20) = 1,460\\text{ bytes}$$\n\n### IP Fragmentation & Path MTU Discovery (PMTUD)\nIf a packet exceeds intermediate hop MTU and has the `DF` (Don't Fragment) bit set, the router drops the packet and returns an ICMP Type 3 Code 4 (Fragmentation Needed) message, enabling PMTUD.",
+    "failureCase": "Black Hole Routers in Cloud VPCs: Misconfigured security firewalls dropping all ICMP traffic prevent PMTUD notifications from reaching the sender, causing TCP connections to hang indefinitely when sending large payloads.",
+    "interviewQuestions": [
+      {
+        "q": "What is the exact mathematical relationship between MTU and MSS?",
+        "a": "MSS is the maximum payload a TCP segment can carry, equal to MTU minus the IP header (20 bytes) and TCP header (20 bytes)."
+      },
+      {
+        "q": "What happens when an IP packet is fragmented and one fragment is lost in transit?",
+        "a": "The destination reassembly timer expires, and the entire IP datagram must be discarded and retransmitted by the transport layer."
+      }
+    ]
+  },
+  {
+    "dayNumber": 9,
+    "dsaTheme": "Queues & Monotonic Deque",
+    "title": "TCP Deep-Dive: 3-Way Handshake, Flow Control & TIME_WAIT",
+    "domain": "Computer Networks",
+    "summary": "SYN/ACK sequence numbers, SYN flood defenses (SYN cookies), sliding window buffer tuning, TCP states, and the rationale behind TIME_WAIT (2MSL).",
+    "mentalModel": "TCP is a reliable byte-stream abstraction over an unreliable network, maintained via acknowledgments, sliding windows, and congestion control loops.",
+    "details": "### TCP 3-Way Handshake\n1. **Client $\\rightarrow$ Server**: `SYN` (Seq = $ISN_C$, Window = $W_C$, MSS = 1460). State: `SYN_SENT`.\n2. **Server $\\rightarrow$ Client**: `SYN + ACK` (Seq = $ISN_S$, Ack = $ISN_C + 1$). State: `SYN_RCVD`.\n3. **Client $\\rightarrow$ Server**: `ACK` (Ack = $ISN_S + 1$). State: `ESTABLISHED`.\n\n### Why the TIME_WAIT State (2MSL) Exists\nWhen a socket initiates an active close, it enters `TIME_WAIT` for 2 Maximum Segment Lifetimes ($2 \\times 60\\text{s} = 120\\text{s}$):\n1. **Ensure Final ACK Delivery**: If the server didn't receive the final ACK, it retransmits `FIN`. The client in `TIME_WAIT` can resend the ACK.\n2. **Prevent Stale Packet Confusion**: Ensures all delayed packets from the old connection die in the network before a new connection reuses the same 4-tuple (SrcIP, SrcPort, DstIP, DstPort).",
+    "failureCase": "Ephemeral Port Exhaustion: A microservice opening short-lived HTTP/1.0 connections without keep-alive exhausts all ~60,000 ephemeral ports due to sockets lingering in TIME_WAIT, causing `EADDRNOTAVAIL` connection errors.",
+    "interviewQuestions": [
+      {
+        "q": "How do SYN Cookies protect against SYN Flood DDoS attacks?",
+        "a": "The server does not allocate a Transmission Control Block (TCB) in RAM upon receiving SYN. Instead, it encodes client connection parameters and a cryptographic hash into the initial sequence number (ISN). When the client ACKs, the server validates the hash and instantiates the connection."
+      },
+      {
+        "q": "What is the Nagle algorithm and why is TCP_NODELAY often enabled in gaming and financial systems?",
+        "a": "Nagle's algorithm buffers small outgoing packets until an outstanding ACK arrives to reduce header overhead. TCP_NODELAY disables this buffering, sending packets immediately to minimize latency."
+      }
+    ]
+  },
+  {
+    "dayNumber": 10,
+    "dsaTheme": "Linked List Patterns",
+    "title": "UDP, QUIC & HTTP Evolution: HTTP/1.1 vs HTTP/2 vs HTTP/3",
+    "domain": "Computer Networks",
+    "summary": "Evolution of web transport: HTTP/1.1 Head-of-Line blocking, HTTP/2 multiplexed streams, and HTTP/3 over QUIC UDP eliminating transport-layer HoL blocking.",
+    "mentalModel": "HTTP/2 solved application-layer HoL blocking via binary framing; HTTP/3 solved transport-layer HoL blocking by rebuilding reliable streams directly over UDP.",
+    "details": "### Protocol Comparison Matrix\n\n| Feature | HTTP/1.1 | HTTP/2 | HTTP/3 (QUIC) |\n| :--- | :--- | :--- | :--- |\n| **Transport Protocol** | TCP | TCP | UDP (QUIC) |\n| **Data Framing** | Plaintext ASCII | Binary Frames | Binary Frames |\n| **Multiplexing** | No (Pipelining flawed) | Yes (Single TCP stream) | Yes (Independent QUIC streams) |\n| **Transport HoL Blocking** | Yes | Yes (1 dropped packet stalls all streams) | **No** (Streams are fully independent) |\n| **Connection Setup** | 2-3 RTT (TCP + TLS) | 2-3 RTT (TCP + TLS) | **0-1 RTT** (Combined Handshake) |\n| **Connection Migration** | Breaks on IP change | Breaks on IP change | **Preserved via 64-bit Connection ID** |",
+    "failureCase": "HTTP/2 Packet Loss Degradation: On mobile cellular networks with 2% packet loss, HTTP/2 performs worse than HTTP/1.1 because a single lost TCP packet stalls the entire multiplexed TCP connection for all active parallel streams.",
+    "interviewQuestions": [
+      {
+        "q": "Why does QUIC use UDP instead of creating a brand new transport protocol alongside TCP and UDP?",
+        "a": "Internet middleboxes (NATs, firewalls, routers) drop packets with unrecognized IP protocol numbers (\"ossification\"). UDP is universally permitted across all public routers and firewalls."
+      },
+      {
+        "q": "How does QUIC support seamless Connection Migration when a mobile device switches from Wi-Fi to 5G?",
+        "a": "QUIC identifies connections using a unique 64-bit Connection ID in the header rather than the IP/Port 4-tuple. When the IP address changes, the Connection ID remains unchanged, avoiding renegotiation."
+      }
+    ]
+  },
+  {
+    "dayNumber": 11,
+    "dsaTheme": "Recursion & Backtracking",
+    "title": "DNS Protocol, Resolvers, TTL & Anycast Routing",
+    "domain": "Distributed Systems & OOP",
+    "summary": "Deep dive into DNS Protocol, Resolvers, TTL & Anycast Routing: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of DNS Protocol, Resolvers, TTL & Anycast Routing under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of DNS Protocol, Resolvers, TTL & Anycast Routing\n\nProduction distributed and operating systems depend on clear contracts between software layers. In DNS Protocol, Resolvers, TTL & Anycast Routing, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in DNS Protocol, Resolvers, TTL & Anycast Routing: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing DNS Protocol, Resolvers, TTL & Anycast Routing?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in DNS Protocol, Resolvers, TTL & Anycast Routing?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 12,
+    "dsaTheme": "Binary Trees: DFS & Paths",
+    "title": "TLS 1.3 Handshake, Asymmetric Encryption & PKI",
+    "domain": "Operating Systems",
+    "summary": "Deep dive into TLS 1.3 Handshake, Asymmetric Encryption & PKI: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of TLS 1.3 Handshake, Asymmetric Encryption & PKI under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of TLS 1.3 Handshake, Asymmetric Encryption & PKI\n\nProduction distributed and operating systems depend on clear contracts between software layers. In TLS 1.3 Handshake, Asymmetric Encryption & PKI, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in TLS 1.3 Handshake, Asymmetric Encryption & PKI: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing TLS 1.3 Handshake, Asymmetric Encryption & PKI?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in TLS 1.3 Handshake, Asymmetric Encryption & PKI?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 13,
+    "dsaTheme": "Binary Trees: BFS & Views",
+    "title": "Relational Database Storage: B+ Trees & Buffer Pool",
+    "domain": "Computer Networks",
+    "summary": "Deep dive into Relational Database Storage: B+ Trees & Buffer Pool: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Relational Database Storage: B+ Trees & Buffer Pool under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Relational Database Storage: B+ Trees & Buffer Pool\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Relational Database Storage: B+ Trees & Buffer Pool, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Relational Database Storage: B+ Trees & Buffer Pool: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Relational Database Storage: B+ Trees & Buffer Pool?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Relational Database Storage: B+ Trees & Buffer Pool?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 14,
+    "dsaTheme": "Binary Search Trees (BST)",
+    "title": "Database ACID, Write-Ahead Logging (WAL) & ARIES",
+    "domain": "Database Management",
+    "summary": "Deep dive into Database ACID, Write-Ahead Logging (WAL) & ARIES: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Database ACID, Write-Ahead Logging (WAL) & ARIES under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Database ACID, Write-Ahead Logging (WAL) & ARIES\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database ACID, Write-Ahead Logging (WAL) & ARIES, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Database ACID, Write-Ahead Logging (WAL) & ARIES: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database ACID, Write-Ahead Logging (WAL) & ARIES?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database ACID, Write-Ahead Logging (WAL) & ARIES?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 15,
+    "dsaTheme": "Heaps & Priority Queues",
+    "title": "Transaction Isolation Levels: Dirty Reads to MVCC",
+    "domain": "Distributed Systems & OOP",
+    "summary": "Deep dive into Transaction Isolation Levels: Dirty Reads to MVCC: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Transaction Isolation Levels: Dirty Reads to MVCC under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Transaction Isolation Levels: Dirty Reads to MVCC\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Transaction Isolation Levels: Dirty Reads to MVCC, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Transaction Isolation Levels: Dirty Reads to MVCC: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Transaction Isolation Levels: Dirty Reads to MVCC?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Transaction Isolation Levels: Dirty Reads to MVCC?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 16,
+    "dsaTheme": "Greedy Algorithms",
+    "title": "Database Indexing: Clustered, Secondary & B-Tree Fragmentation",
+    "domain": "Operating Systems",
+    "summary": "Deep dive into Database Indexing: Clustered, Secondary & B-Tree Fragmentation: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Database Indexing: Clustered, Secondary & B-Tree Fragmentation under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Database Indexing: Clustered, Secondary & B-Tree Fragmentation\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database Indexing: Clustered, Secondary & B-Tree Fragmentation, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Database Indexing: Clustered, Secondary & B-Tree Fragmentation: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database Indexing: Clustered, Secondary & B-Tree Fragmentation?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database Indexing: Clustered, Secondary & B-Tree Fragmentation?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 17,
+    "dsaTheme": "Dynamic Programming: 1D Basics",
+    "title": "Database Sharding, Partitioning & Cross-Shard Joins",
+    "domain": "Computer Networks",
+    "summary": "Deep dive into Database Sharding, Partitioning & Cross-Shard Joins: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Database Sharding, Partitioning & Cross-Shard Joins under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Database Sharding, Partitioning & Cross-Shard Joins\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Database Sharding, Partitioning & Cross-Shard Joins, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Database Sharding, Partitioning & Cross-Shard Joins: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Database Sharding, Partitioning & Cross-Shard Joins?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Database Sharding, Partitioning & Cross-Shard Joins?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 18,
+    "dsaTheme": "Dynamic Programming: State Machine",
+    "title": "NoSQL Storage Engines: LSM-Trees vs B-Trees",
+    "domain": "Database Management",
+    "summary": "Deep dive into NoSQL Storage Engines: LSM-Trees vs B-Trees: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of NoSQL Storage Engines: LSM-Trees vs B-Trees under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of NoSQL Storage Engines: LSM-Trees vs B-Trees\n\nProduction distributed and operating systems depend on clear contracts between software layers. In NoSQL Storage Engines: LSM-Trees vs B-Trees, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in NoSQL Storage Engines: LSM-Trees vs B-Trees: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing NoSQL Storage Engines: LSM-Trees vs B-Trees?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in NoSQL Storage Engines: LSM-Trees vs B-Trees?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 19,
+    "dsaTheme": "Dynamic Programming: 2D Grids",
+    "title": "SOLID Principles & Object-Oriented Architecture",
+    "domain": "Distributed Systems & OOP",
+    "summary": "Deep dive into SOLID Principles & Object-Oriented Architecture: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of SOLID Principles & Object-Oriented Architecture under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of SOLID Principles & Object-Oriented Architecture\n\nProduction distributed and operating systems depend on clear contracts between software layers. In SOLID Principles & Object-Oriented Architecture, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in SOLID Principles & Object-Oriented Architecture: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing SOLID Principles & Object-Oriented Architecture?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in SOLID Principles & Object-Oriented Architecture?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 20,
+    "dsaTheme": "Dynamic Programming: Knapsack",
+    "title": "Creational & Behavioral Design Patterns in Systems",
+    "domain": "Operating Systems",
+    "summary": "Deep dive into Creational & Behavioral Design Patterns in Systems: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Creational & Behavioral Design Patterns in Systems under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Creational & Behavioral Design Patterns in Systems\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Creational & Behavioral Design Patterns in Systems, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Creational & Behavioral Design Patterns in Systems: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Creational & Behavioral Design Patterns in Systems?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Creational & Behavioral Design Patterns in Systems?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 21,
+    "dsaTheme": "Dynamic Programming: Strings",
+    "title": "Linux I/O Multiplexing: select, poll, epoll & io_uring",
+    "domain": "Computer Networks",
+    "summary": "Deep dive into Linux I/O Multiplexing: select, poll, epoll & io_uring: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Linux I/O Multiplexing: select, poll, epoll & io_uring under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Linux I/O Multiplexing: select, poll, epoll & io_uring\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Linux I/O Multiplexing: select, poll, epoll & io_uring, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Linux I/O Multiplexing: select, poll, epoll & io_uring: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Linux I/O Multiplexing: select, poll, epoll & io_uring?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Linux I/O Multiplexing: select, poll, epoll & io_uring?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 22,
+    "dsaTheme": "Graph Fundamentals: BFS & DFS",
+    "title": "Memory Management & Garbage Collection Algorithms",
+    "domain": "Database Management",
+    "summary": "Deep dive into Memory Management & Garbage Collection Algorithms: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Memory Management & Garbage Collection Algorithms under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Memory Management & Garbage Collection Algorithms\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Memory Management & Garbage Collection Algorithms, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Memory Management & Garbage Collection Algorithms: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Memory Management & Garbage Collection Algorithms?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Memory Management & Garbage Collection Algorithms?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 23,
+    "dsaTheme": "Matrix as Graph",
+    "title": "CPU Caches, Cache Lines, False Sharing & NUMA",
+    "domain": "Distributed Systems & OOP",
+    "summary": "Deep dive into CPU Caches, Cache Lines, False Sharing & NUMA: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of CPU Caches, Cache Lines, False Sharing & NUMA under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of CPU Caches, Cache Lines, False Sharing & NUMA\n\nProduction distributed and operating systems depend on clear contracts between software layers. In CPU Caches, Cache Lines, False Sharing & NUMA, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in CPU Caches, Cache Lines, False Sharing & NUMA: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing CPU Caches, Cache Lines, False Sharing & NUMA?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in CPU Caches, Cache Lines, False Sharing & NUMA?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 24,
+    "dsaTheme": "Topological Sort & DAGs",
+    "title": "Distributed Transactions: 2PC, 3PC & Saga Choreography",
+    "domain": "Operating Systems",
+    "summary": "Deep dive into Distributed Transactions: 2PC, 3PC & Saga Choreography: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Distributed Transactions: 2PC, 3PC & Saga Choreography under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Distributed Transactions: 2PC, 3PC & Saga Choreography\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Transactions: 2PC, 3PC & Saga Choreography, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Distributed Transactions: 2PC, 3PC & Saga Choreography: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Transactions: 2PC, 3PC & Saga Choreography?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Transactions: 2PC, 3PC & Saga Choreography?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 25,
+    "dsaTheme": "Shortest Path: Dijkstra",
+    "title": "Distributed Consensus: Raft vs Paxos & Split-Brain",
+    "domain": "Computer Networks",
+    "summary": "Deep dive into Distributed Consensus: Raft vs Paxos & Split-Brain: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Distributed Consensus: Raft vs Paxos & Split-Brain under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Distributed Consensus: Raft vs Paxos & Split-Brain\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Consensus: Raft vs Paxos & Split-Brain, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Distributed Consensus: Raft vs Paxos & Split-Brain: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Consensus: Raft vs Paxos & Split-Brain?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Consensus: Raft vs Paxos & Split-Brain?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 26,
+    "dsaTheme": "Disjoint Set Union (DSU)",
+    "title": "Distributed Clocks: NTP, Lamport & Vector Clocks",
+    "domain": "Database Management",
+    "summary": "Deep dive into Distributed Clocks: NTP, Lamport & Vector Clocks: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Distributed Clocks: NTP, Lamport & Vector Clocks under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Distributed Clocks: NTP, Lamport & Vector Clocks\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Distributed Clocks: NTP, Lamport & Vector Clocks, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Distributed Clocks: NTP, Lamport & Vector Clocks: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Distributed Clocks: NTP, Lamport & Vector Clocks?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Distributed Clocks: NTP, Lamport & Vector Clocks?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 27,
+    "dsaTheme": "Tries (Prefix Trees)",
+    "title": "Serialization & RPC Protocols: Protobuf, gRPC vs REST",
+    "domain": "Distributed Systems & OOP",
+    "summary": "Deep dive into Serialization & RPC Protocols: Protobuf, gRPC vs REST: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Serialization & RPC Protocols: Protobuf, gRPC vs REST under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Serialization & RPC Protocols: Protobuf, gRPC vs REST\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Serialization & RPC Protocols: Protobuf, gRPC vs REST, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Serialization & RPC Protocols: Protobuf, gRPC vs REST: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Serialization & RPC Protocols: Protobuf, gRPC vs REST?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Serialization & RPC Protocols: Protobuf, gRPC vs REST?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 28,
+    "dsaTheme": "Intervals & Sweep Line",
+    "title": "Modern Web Security: OAuth 2.0, JWT, CSRF & XSS",
+    "domain": "Operating Systems",
+    "summary": "Deep dive into Modern Web Security: OAuth 2.0, JWT, CSRF & XSS: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Modern Web Security: OAuth 2.0, JWT, CSRF & XSS under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Modern Web Security: OAuth 2.0, JWT, CSRF & XSS\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Modern Web Security: OAuth 2.0, JWT, CSRF & XSS, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Modern Web Security: OAuth 2.0, JWT, CSRF & XSS: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Modern Web Security: OAuth 2.0, JWT, CSRF & XSS?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Modern Web Security: OAuth 2.0, JWT, CSRF & XSS?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 29,
+    "dsaTheme": "String Matching & Rolling Hash",
+    "title": "WebSockets, Server-Sent Events (SSE) & Connection Scale",
+    "domain": "Computer Networks",
+    "summary": "Deep dive into WebSockets, Server-Sent Events (SSE) & Connection Scale: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of WebSockets, Server-Sent Events (SSE) & Connection Scale under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of WebSockets, Server-Sent Events (SSE) & Connection Scale\n\nProduction distributed and operating systems depend on clear contracts between software layers. In WebSockets, Server-Sent Events (SSE) & Connection Scale, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in WebSockets, Server-Sent Events (SSE) & Connection Scale: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing WebSockets, Server-Sent Events (SSE) & Connection Scale?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in WebSockets, Server-Sent Events (SSE) & Connection Scale?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  },
+  {
+    "dayNumber": 30,
+    "dsaTheme": "Grand Integration & Review",
+    "title": "Production SRE: Distributed Tracing, APM & Latency SLOs",
+    "domain": "Database Management",
+    "summary": "Deep dive into Production SRE: Distributed Tracing, APM & Latency SLOs: core mechanics, failure modes, latency characteristics, and system invariants.",
+    "mentalModel": "Understanding the architectural guarantees and trade-offs of Production SRE: Distributed Tracing, APM & Latency SLOs under extreme production loads.",
+    "details": "### Core Architecture & Operating Principles of Production SRE: Distributed Tracing, APM & Latency SLOs\n\nProduction distributed and operating systems depend on clear contracts between software layers. In Production SRE: Distributed Tracing, APM & Latency SLOs, key considerations include memory footprint, CPU cache interactions, bounded latency, and failure domains.\n\n### Invariant Guarantees\n- Enforces strict consistency and data safety invariants across all operating states.\n- Handles edge cases such as network timeouts, partial node failures, and resource exhaustion gracefully.\n- Exposes high-fidelity metrics and tracing hooks for production observability.",
+    "failureCase": "Production Failure in Production SRE: Distributed Tracing, APM & Latency SLOs: Under extreme burst traffic, subtle resource exhaustion or lock contention leads to cascading failures across upstream dependent services.",
+    "interviewQuestions": [
+      {
+        "q": "What is the primary trade-off when optimizing Production SRE: Distributed Tracing, APM & Latency SLOs?",
+        "a": "Balancing strict consistency or absolute guarantees against throughput, memory overhead, and network latency."
+      },
+      {
+        "q": "How do you diagnose and debug latency anomalies in Production SRE: Distributed Tracing, APM & Latency SLOs?",
+        "a": "Use distributed tracing (OpenTelemetry), CPU profilers (perf/eBPF flame graphs), and high-percentile metric distributions (p99/p99.9)."
+      }
+    ]
+  }
+]

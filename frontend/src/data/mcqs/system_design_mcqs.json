@@ -1,0 +1,582 @@
+[
+  {
+    "id": "sd_mcq_1",
+    "dayId": "system_design",
+    "topic": "CAP Theorem",
+    "question": "Under the CAP Theorem, when a network partition (P) occurs in a distributed database, what fundamental trade-off must the system make?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Choose between Latency and Performance."
+      },
+      {
+        "key": "B",
+        "text": "Choose between Consistency (every read receives the most recent write or an error) and Availability (every non-failing node returns a response)."
+      },
+      {
+        "key": "C",
+        "text": "Choose between Horizontal Scaling and Vertical Scaling."
+      },
+      {
+        "key": "D",
+        "text": "Drop ACID transactions in favor of full durability."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A network partition means communication between nodes is disrupted. If the system continues accepting writes on isolated nodes to maintain Availability (AP), data diverges, sacrificing Consistency. If it halts writes until the partition heals to ensure Consistency (CP), it sacrifices Availability. A distributed system cannot achieve both C and A during a partition.",
+    "difficulty": "medium",
+    "orderIndex": 1
+  },
+  {
+    "id": "sd_mcq_2",
+    "dayId": "system_design",
+    "topic": "Consistent Hashing",
+    "question": "What is the primary advantage of Consistent Hashing over naive modulo hashing `hash(key) % N` when scaling cache servers from N to N+1?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "It completely eliminates the need for cache eviction policies like LRU."
+      },
+      {
+        "key": "B",
+        "text": "Only K/N keys need to be remapped on average (where K is total keys), preventing a catastrophic cache stampede."
+      },
+      {
+        "key": "C",
+        "text": "It compresses all keys into 32-bit integers."
+      },
+      {
+        "key": "D",
+        "text": "It ensures linear search complexity for keys."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In naive modulo hashing `hash % N`, changing N to N+1 invalidates almost 100% of cached keys, causing an instantaneous cache thundering herd on backend databases. In consistent hashing on a ring [0, 2^32-1], adding or removing a node only reassigns keys belonging to the immediate neighboring slice, moving only ~K/N keys on average.",
+    "difficulty": "medium",
+    "orderIndex": 2
+  },
+  {
+    "id": "sd_mcq_3",
+    "dayId": "system_design",
+    "topic": "Consistent Hashing Virtual Nodes",
+    "question": "Why are 'Virtual Nodes' (vnodes) introduced in Consistent Hashing implementations like Cassandra and Dynamo?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "To encrypt keys in transit."
+      },
+      {
+        "key": "B",
+        "text": "To solve non-uniform key distribution (hotspots) by mapping each physical machine to multiple positions across the hash ring."
+      },
+      {
+        "key": "C",
+        "text": "To allow nodes to run multiple operating systems."
+      },
+      {
+        "key": "D",
+        "text": "To replace DNS resolution."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. With a small number of physical nodes, random ring placement leads to unevenly sized ring segments, creating hot-spot nodes that take disproportionate traffic. Assigning each physical server hundreds of virtual tokens/nodes across the ring homogenizes partition sizes and distributes load evenly.",
+    "difficulty": "medium",
+    "orderIndex": 3
+  },
+  {
+    "id": "sd_mcq_4",
+    "dayId": "system_design",
+    "topic": "Caching Strategies",
+    "question": "In a 'Write-Back' (Write-Behind) caching strategy, when is data written to the permanent storage database?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Synchronously before updating the cache."
+      },
+      {
+        "key": "B",
+        "text": "Asynchronously in batches after writing immediately to the cache, achieving ultra-low write latency at the risk of data loss if the cache crashes."
+      },
+      {
+        "key": "C",
+        "text": "Only when the cache experiences a cache miss."
+      },
+      {
+        "key": "D",
+        "text": "Write-back never writes to permanent storage."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In Write-Back, the application writes directly to cache and receives an immediate acknowledgment. Dirty entries are periodically flushed to the backing store asynchronously in batches. This provides high write throughput and low latency, but risks data loss if the cache node loses power before flushing.",
+    "difficulty": "medium",
+    "orderIndex": 4
+  },
+  {
+    "id": "sd_mcq_5",
+    "dayId": "system_design",
+    "topic": "Caching Patterns",
+    "question": "What is a 'Cache-Aside' (Lazy Loading) pattern?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "The cache is completely responsible for fetching and writing to the database."
+      },
+      {
+        "key": "B",
+        "text": "The application looks for data in cache first; if not found (cache miss), the application queries database and writes it back to cache for future requests."
+      },
+      {
+        "key": "C",
+        "text": "Data is pre-loaded into cache during database boot time."
+      },
+      {
+        "key": "D",
+        "text": "The database updates the cache via triggers."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In Cache-Aside, the application code mediates between the cache and storage. Upon read, application checks cache; on miss, it loads from DB and stores into cache. Only requested data is cached, avoiding bloated memory, though initial misses incur higher latency.",
+    "difficulty": "easy",
+    "orderIndex": 5
+  },
+  {
+    "id": "sd_mcq_6",
+    "dayId": "system_design",
+    "topic": "Database Sharding",
+    "question": "What is the 'Celebrity / Hotspot' problem in database sharding by Shard Key?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "When all shard keys exceed 256 bits in length."
+      },
+      {
+        "key": "B",
+        "text": "When an individual entity (e.g. a celebrity with 50M followers) receives millions of read/write queries, overwhelming the single shard where their data resides."
+      },
+      {
+        "key": "C",
+        "text": "When shard replication lag exceeds 1 second."
+      },
+      {
+        "key": "D",
+        "text": "When database indexes become corrupted."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. If user_id is the shard key, all tweets, posts, or reads for a high-profile account hash to the exact same physical shard. While other shards remain idle, the celebrity shard is bombarded by millions of requests. Mitigations include compound shard keys or salt prefixes.",
+    "difficulty": "medium",
+    "orderIndex": 6
+  },
+  {
+    "id": "sd_mcq_7",
+    "dayId": "system_design",
+    "topic": "Bloom Filters",
+    "question": "What are the characteristic error properties of a Bloom Filter in distributed caching and database lookups?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "May yield False Negatives, but never False Positives."
+      },
+      {
+        "key": "B",
+        "text": "May yield False Positives (says item exists when it doesn't), but NEVER yields False Negatives (if it says item doesn't exist, it definitely does not)."
+      },
+      {
+        "key": "C",
+        "text": "Never yields any false positives or false negatives."
+      },
+      {
+        "key": "D",
+        "text": "Only works on floating-point numbers."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A Bloom Filter uses k hash functions to set bit positions in a bit array. If all k bits are 1, the item might be present (hash collision could produce a False Positive). However, if even one bit is 0, the item was definitely never added (Zero False Negatives). Used by Cassandra/BigTable to prevent unnecessary disk seeks.",
+    "difficulty": "medium",
+    "orderIndex": 7
+  },
+  {
+    "id": "sd_mcq_8",
+    "dayId": "system_design",
+    "topic": "Message Queues",
+    "question": "In distributed message brokers like Apache Kafka, what provides strict message ordering?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Messages are strictly ordered across the entire topic regardless of partitions."
+      },
+      {
+        "key": "B",
+        "text": "Messages are strictly ordered only WITHIN a single partition, using partition keys."
+      },
+      {
+        "key": "C",
+        "text": "Messages are ordered by consumer timestamp."
+      },
+      {
+        "key": "D",
+        "text": "TCP sliding window guarantees topic-wide ordering."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. In Kafka, ordering is guaranteed ONLY within a partition. Messages with the same partition key (e.g., account_id) are always routed to the same partition and appended sequentially to the commit log with monotonically increasing offsets. Global ordering across all partitions is not provided.",
+    "difficulty": "medium",
+    "orderIndex": 8
+  },
+  {
+    "id": "sd_mcq_9",
+    "dayId": "system_design",
+    "topic": "Distributed Transactions",
+    "question": "What is the primary drawback of the Two-Phase Commit (2PC) protocol in distributed systems?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "It cannot ensure atomicity."
+      },
+      {
+        "key": "B",
+        "text": "It is a blocking protocol: if the coordinator crashes during the prepare phase, cohort nodes remain locked indefinitely waiting for the commit command."
+      },
+      {
+        "key": "C",
+        "text": "It requires no network communication."
+      },
+      {
+        "key": "D",
+        "text": "It only works with SQLite."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. 2PC is notoriously fragile in microservices because it holds database locks across distributed network boundaries. If the coordinator or any cohort fails during the voting phase, participants block holding exclusive locks, degrading system throughput. The Saga pattern is preferred for distributed workflows.",
+    "difficulty": "hard",
+    "orderIndex": 9
+  },
+  {
+    "id": "sd_mcq_10",
+    "dayId": "system_design",
+    "topic": "Saga Pattern",
+    "question": "How does the Saga pattern maintain eventual data consistency across microservices without distributed locks?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "By using shared distributed hardware memory."
+      },
+      {
+        "key": "B",
+        "text": "By executing a sequence of local transactions where each step publishes an event, and failures trigger compensating transactions in reverse order to undo changes."
+      },
+      {
+        "key": "C",
+        "text": "By locking all microservice databases simultaneously."
+      },
+      {
+        "key": "D",
+        "text": "By converting all databases into in-memory Redis caches."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. A Saga breaks a distributed transaction into a series of local transactions. Each transaction updates its local database and publishes an event/message. If a step fails (e.g. payment rejected), the saga orchestrator or choreographing services execute explicit compensating transactions (e.g. cancel order, restock inventory) to undo earlier steps.",
+    "difficulty": "medium",
+    "orderIndex": 10
+  },
+  {
+    "id": "sd_mcq_11",
+    "dayId": "system_design",
+    "topic": "Load Balancing Algorithms",
+    "question": "When should 'Least Connections' load balancing be chosen over 'Round Robin'?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "When all requests have identical, sub-millisecond execution times."
+      },
+      {
+        "key": "B",
+        "text": "When requests have highly variable processing durations or maintain long-lived connections (such as WebSockets or database connections)."
+      },
+      {
+        "key": "C",
+        "text": "When using UDP instead of TCP."
+      },
+      {
+        "key": "D",
+        "text": "When there is only one backend server."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Round Robin blindly cycles requests sequentially. If certain requests take minutes (video encoding, file upload, WebSockets), Round Robin can pile heavy tasks onto an already overloaded server. Least Connections directs new traffic to the server with the fewest active sessions, balancing uneven workloads.",
+    "difficulty": "easy",
+    "orderIndex": 11
+  },
+  {
+    "id": "sd_mcq_12",
+    "dayId": "system_design",
+    "topic": "Database Replication Lag",
+    "question": "What is 'Read-Your-Own-Writes' (Read-After-Write) consistency, and how is it achieved in an asynchronous primary-replica architecture?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Clients must always read from replicas only."
+      },
+      {
+        "key": "B",
+        "text": "Guarantees a user sees their own update immediately; achieved by routing reads for recently modified data directly to the Primary DB or checking replication timestamps."
+      },
+      {
+        "key": "C",
+        "text": "Writing to disk twice on client devices."
+      },
+      {
+        "key": "D",
+        "text": "Turning off database indexes."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Due to asynchronous replication lag, if a user updates their profile on the Primary and immediately refreshes, reading from a lagging replica would show stale old data. Read-Your-Own-Writes routes queries for data updated within a recent window (e.g., 5 seconds) to the Primary, while serving read-only public feeds from replicas.",
+    "difficulty": "hard",
+    "orderIndex": 12
+  },
+  {
+    "id": "sd_mcq_13",
+    "dayId": "system_design",
+    "topic": "Idempotency",
+    "question": "Why is an 'Idempotency Key' essential for payment APIs and webhook ingestion?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "To encrypt credit card numbers with AES-256."
+      },
+      {
+        "key": "B",
+        "text": "To ensure that network retries or duplicate webhook delivery do not execute the payment or action multiple times."
+      },
+      {
+        "key": "C",
+        "text": "To compress HTTP headers."
+      },
+      {
+        "key": "D",
+        "text": "To bypass load balancer checks."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Network timeouts often occur after the server processed a request but before the client received the response. The client retries the request. If the server tracks the unique `Idempotency-Key` in an atomic store (e.g., Redis with SETNX), subsequent identical requests return the cached result without double-charging the customer.",
+    "difficulty": "easy",
+    "orderIndex": 13
+  },
+  {
+    "id": "sd_mcq_14",
+    "dayId": "system_design",
+    "topic": "PACELC Theorem",
+    "question": "What does the PACELC theorem extend beyond the traditional CAP theorem?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "It incorporates network security and encryption."
+      },
+      {
+        "key": "B",
+        "text": "It states: If Partition (P), choose between Availability (A) and Consistency (C); Else (E), choose between Latency (L) and Consistency (C)."
+      },
+      {
+        "key": "C",
+        "text": "It applies only to SQL databases."
+      },
+      {
+        "key": "D",
+        "text": "It defines CPU clock cycles in microservices."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Formulated by Daniel Abadi, PACELC observes that systems spend 99.9% of their time NOT in a network partition. Even in normal healthy operation (Else), a system must choose between Latency (L) (returning fast from local replica) and Consistency (C) (waiting for quorum confirmation across nodes). Example: MongoDB is PC/EC; Cassandra is PA/EL.",
+    "difficulty": "hard",
+    "orderIndex": 14
+  },
+  {
+    "id": "sd_mcq_15",
+    "dayId": "system_design",
+    "topic": "Content Delivery Networks (CDN)",
+    "question": "What is the difference between CDN 'Push' and CDN 'Pull' (Origin Fetch)?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Push uses HTTP; Pull uses FTP."
+      },
+      {
+        "key": "B",
+        "text": "In Push, the content creator uploads new assets directly to edge servers before requests arrive; in Pull, the edge server fetches assets from origin server on-demand upon first user request."
+      },
+      {
+        "key": "C",
+        "text": "Push only caches HTML; Pull only caches images."
+      },
+      {
+        "key": "D",
+        "text": "Pull is only used for WebSockets."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. CDN Push sends content to CDN edge nodes proactively (ideal for software releases or low-traffic scheduled updates). CDN Pull fetches assets dynamically from the origin when a user requests an uncached file and caches it with a TTL (ideal for high-traffic sites with frequent unpredictable changes).",
+    "difficulty": "medium",
+    "orderIndex": 15
+  },
+  {
+    "id": "sd_mcq_16",
+    "dayId": "system_design",
+    "topic": "Distributed ID Generation",
+    "question": "How does Twitter's Snowflake ID generator guarantee 64-bit unique, roughly time-sorted IDs across distributed workers without coordination?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "By using centralized UUID v4 random generation."
+      },
+      {
+        "key": "B",
+        "text": "By composing the 64-bit integer into: 1 unused sign bit + 41-bit timestamp (millisecond precision) + 10-bit machine/datacenter ID + 12-bit per-millisecond sequence number."
+      },
+      {
+        "key": "C",
+        "text": "By locking a central MySQL auto-increment counter."
+      },
+      {
+        "key": "D",
+        "text": "By querying GPS atomic clocks."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Snowflake uses bit allocation: 41 bits of epoch timestamp (gives ~69 years), 10 bits of datacenter/machine ID (supports 1,024 nodes), and 12 bits of local sequence counter (4,096 IDs per millisecond per node). Because the timestamp occupies the most significant bits, generated IDs are naturally indexable and time-sortable.",
+    "difficulty": "medium",
+    "orderIndex": 16
+  },
+  {
+    "id": "sd_mcq_17",
+    "dayId": "system_design",
+    "topic": "Gossip Protocol",
+    "question": "In peer-to-peer distributed databases like Cassandra, what role does the Gossip Protocol play?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "It executes SQL queries."
+      },
+      {
+        "key": "B",
+        "text": "It is a decentralized, probabilistic communication protocol where nodes periodically exchange node health, topology, and token range state with random peers."
+      },
+      {
+        "key": "C",
+        "text": "It encrypts user passwords."
+      },
+      {
+        "key": "D",
+        "text": "It compiles Java bytecode into native machine code."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. Gossip protocols spread node state and failure detection epidemically. Every second, each node contacts a few random peers to exchange heartbeats and metadata. Information spreads exponentially throughout the cluster in O(log N) rounds without any central master coordinator.",
+    "difficulty": "medium",
+    "orderIndex": 17
+  },
+  {
+    "id": "sd_mcq_18",
+    "dayId": "system_design",
+    "topic": "Circuit Breaker Pattern",
+    "question": "What are the three core states of the Circuit Breaker pattern in microservice resiliency?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "Active, Inactive, Suspended."
+      },
+      {
+        "key": "B",
+        "text": "Closed (normal traffic flows), Open (calls fail fast without calling the degraded dependency), and Half-Open (trial requests test if service recovered)."
+      },
+      {
+        "key": "C",
+        "text": "Read, Write, Execute."
+      },
+      {
+        "key": "D",
+        "text": "Leader, Follower, Candidate."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. When downstream service failure rate exceeds a threshold, the breaker flips to 'Open', failing calls immediately to prevent thread pool exhaustion and cascading system crashes. After a cooldown, it enters 'Half-Open' to send a small percentage of trial requests. If successful, it resets to 'Closed'.",
+    "difficulty": "medium",
+    "orderIndex": 18
+  },
+  {
+    "id": "sd_mcq_19",
+    "dayId": "system_design",
+    "topic": "LSM Trees vs B-Trees",
+    "question": "Why do write-heavy distributed databases (e.g. Cassandra, RocksDB, BigTable) use Log-Structured Merge (LSM) Trees instead of traditional B-Trees?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "LSM trees convert random disk writes into sequential disk writes by appending to an in-memory MemTable and flushing immutable SSTables sequentially to disk."
+      },
+      {
+        "key": "B",
+        "text": "LSM trees use zero disk space."
+      },
+      {
+        "key": "C",
+        "text": "B-Trees cannot store strings."
+      },
+      {
+        "key": "D",
+        "text": "LSM trees eliminate the need for memory RAM."
+      }
+    ],
+    "correctOption": "A",
+    "detailedExplanation": "Correct: A. B-Trees perform random in-place writes to disk pages, which degrades write throughput on HDDs and SSDs. LSM trees append writes to an append-only WAL and an in-memory red-black tree (MemTable). When full, it flushes sequentially to disk as an SSTable. Background compaction merges sorted runs, achieving orders of magnitude higher write throughput.",
+    "difficulty": "hard",
+    "orderIndex": 19
+  },
+  {
+    "id": "sd_mcq_20",
+    "dayId": "system_design",
+    "topic": "WebSocket vs Server-Sent Events (SSE)",
+    "question": "When designing a live stock ticker or real-time sports score notification system, why might Server-Sent Events (SSE) be preferred over WebSockets?",
+    "codeSnippet": null,
+    "options": [
+      {
+        "key": "A",
+        "text": "SSE is bidirectional, whereas WebSockets are unidirectional."
+      },
+      {
+        "key": "B",
+        "text": "SSE is a lightweight unidirectional protocol operating over standard HTTP/HTTPS with native browser reconnection and HTTP/2 multiplexing, ideal when the client only receives server updates."
+      },
+      {
+        "key": "C",
+        "text": "SSE requires opening arbitrary raw TCP ports."
+      },
+      {
+        "key": "D",
+        "text": "WebSockets cannot be encrypted."
+      }
+    ],
+    "correctOption": "B",
+    "detailedExplanation": "Correct: B. If communication is purely server-to-client (tickers, notifications, notifications feed), WebSockets introduce unnecessary complexity because they require upgrading the connection to a custom binary protocol. SSE runs over plain standard HTTP, supports automatic reconnection out of the box, works smoothly through corporate firewalls, and multiplexes cleanly over HTTP/2.",
+    "difficulty": "medium",
+    "orderIndex": 20
+  }
+]

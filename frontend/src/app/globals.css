@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+:root {
+  --background: 250 250 248;
+  --surface: 255 255 255;
+  --surface-raised: 248 249 250;
+  --border: 229 231 235;
+  --text-primary: 17 24 39;
+  --text-secondary: 75 85 99;
+  --text-muted: 156 163 175;
+  --accent: 79 70 229;
+  --accent-hover: 67 56 202;
+  --accent-foreground: 255 255 255;
+  --success: 34 197 94;
+  --success-bg: 240 253 244;
+  --warning: 245 158 11;
+  --warning-bg: 255 251 235;
+  --danger: 239 68 68;
+  --danger-bg: 254 242 242;
+  --ring: 79 70 229;
+  --lc-badge: 245 158 11;
+  --cf-badge: 59 130 246;
+  --easy: 34 197 94;
+  --medium: 245 158 11;
+  --hard: 244 114 182;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"],
+.dark {
+  --background: 15 23 42;
+  --surface: 30 41 59;
+  --surface-raised: 51 65 85;
+  --border: 51 65 85;
+  --text-primary: 226 232 240;
+  --text-secondary: 148 163 184;
+  --text-muted: 100 116 139;
+  --accent: 129 140 248;
+  --accent-hover: 165 180 252;
+  --accent-foreground: 15 23 42;
+  --success: 74 222 128;
+  --success-bg: 20 83 45;
+  --warning: 251 191 36;
+  --warning-bg: 120 53 15;
+  --danger: 248 113 113;
+  --danger-bg: 127 29 29;
+  --ring: 129 140 248;
+  --lc-badge: 251 191 36;
+  --cf-badge: 96 165 250;
+  --easy: 74 222 128;
+  --medium: 251 191 36;
+  --hard: 244 114 182;
+  --shadow-soft: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--text-primary));
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom utility colors */
+.bg-background { background-color: rgb(var(--background)); }
+.bg-surface { background-color: rgb(var(--surface)); }
+.bg-surface-raised { background-color: rgb(var(--surface-raised)); }
+.bg-accent { background-color: rgb(var(--accent)); }
+.bg-accent-hover:hover { background-color: rgb(var(--accent-hover)); }
+.bg-success { background-color: rgb(var(--success)); }
+.bg-warning { background-color: rgb(var(--warning)); }
+.bg-danger { background-color: rgb(var(--danger)); }
+
+.text-primary { color: rgb(var(--text-primary)); }
+.text-secondary { color: rgb(var(--text-secondary)); }
+.text-muted { color: rgb(var(--text-muted)); }
+.text-accent { color: rgb(var(--accent)); }
+.text-success { color: rgb(var(--success)); }
+.text-warning { color: rgb(var(--warning)); }
+.text-danger { color: rgb(var(--danger)); }
+
+.border-border-token { border-color: rgb(var(--border)); }
+.border-accent { border-color: rgb(var(--accent)); }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-muted));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Responsive adaptive background ─────────────────────────── */
+/* Surfaces are slightly translucent so the live canvas glows through */
+:root {
+  --surface-opacity: 0.88;
+}
+
+[data-theme="dark"],
+.dark {
+  --surface-opacity: 0.80;
+}
+
+/* Cards and surfaces allow canvas glow to bleed through slightly */
+.bg-\[rgb\(var\(--surface\)\)\] {
+  background-color: rgba(var(--surface), var(--surface-opacity)) !important;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Fade-in animation ───────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* ── Slide-up reveal animation for animate-in utility ─────────── */
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation-fill-mode: both;
+}
+.fade-in {
+  animation-name: fadeIn;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+}
+.slide-in-from-bottom-2 {
+  animation-name: slideInFromBottom;
+  animation-duration: 0.35s;
+  animation-timing-function: ease-out;
+}
+.duration-300 {
+  /* handled by Tailwind */
+}
+
+/* ── Thin scrollbar for sidebars ─────────────────────────────── */
+.scrollbar-thin::-webkit-scrollbar { width: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 9999px;
+}
