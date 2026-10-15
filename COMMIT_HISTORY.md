@@ -332,3 +332,7 @@
 - **Message**: `perf(canvas): optimize canvas render loop with requestAnimationFrame throttling`
 - **Timestamp**: `2026-10-15T15:28:45+05:30`
 
+### [2026-10-15 20:05:30] Commit #84
+- **Message**: `feat(ui): add slider controls for particle background intensity`
+- **Timestamp**: `2026-10-15T20:05:30+05:30`
+
