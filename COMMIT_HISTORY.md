@@ -344,3 +344,7 @@
 - **Message**: `feat(day-view): build ProblemList block with platform badge and difficulty badges`
 - **Timestamp**: `2026-10-16T15:28:45+05:30`
 
+### [2026-10-16 20:05:30] Commit #87
+- **Message**: `feat(day-view): integrate LeetCode and Codeforces external link redirects`
+- **Timestamp**: `2026-10-16T20:05:30+05:30`
+
