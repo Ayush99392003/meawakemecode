@@ -352,3 +352,7 @@
 - **Message**: `feat(theory-view): build CsFundamentalsBlock collapsible reading component`
 - **Timestamp**: `2026-10-17T10:14:22+05:30`
 
+### [2026-10-17 15:28:45] Commit #89
+- **Message**: `feat(markdown): integrate ReactMarkdown with KaTeX mathematical formulas`
+- **Timestamp**: `2026-10-17T15:28:45+05:30`
+
