@@ -348,3 +348,7 @@
 - **Message**: `feat(day-view): integrate LeetCode and Codeforces external link redirects`
 - **Timestamp**: `2026-10-16T20:05:30+05:30`
 
+### [2026-10-17 10:14:22] Commit #88
+- **Message**: `feat(theory-view): build CsFundamentalsBlock collapsible reading component`
+- **Timestamp**: `2026-10-17T10:14:22+05:30`
+
