@@ -376,3 +376,7 @@
 - **Message**: `feat(mcq-view): build McqGauntlet interactive quiz component`
 - **Timestamp**: `2026-10-19T10:14:22+05:30`
 
+### [2026-10-19 15:28:45] Commit #95
+- **Message**: `feat(mcq-view): implement option selection, immediate explanation, and scoring`
+- **Timestamp**: `2026-10-19T15:28:45+05:30`
+
