@@ -424,3 +424,7 @@
 - **Message**: `feat(search): build global search page across problems, theory, and MCQs`
 - **Timestamp**: `2026-10-23T10:14:22+05:30`
 
+### [2026-10-23 15:28:45] Commit #107
+- **Message**: `perf(search): debounce search input queries to prevent UI freezing`
+- **Timestamp**: `2026-10-23T15:28:45+05:30`
+
