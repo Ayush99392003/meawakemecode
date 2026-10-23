@@ -420,3 +420,7 @@
 - **Message**: `feat(library): add search bar to query all 90+ technical topics`
 - **Timestamp**: `2026-10-22T20:05:30+05:30`
 
+### [2026-10-23 10:14:22] Commit #106
+- **Message**: `feat(search): build global search page across problems, theory, and MCQs`
+- **Timestamp**: `2026-10-23T10:14:22+05:30`
+
