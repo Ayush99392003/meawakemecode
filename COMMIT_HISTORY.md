@@ -460,3 +460,7 @@
 - **Message**: `feat(accountability): design Reverse Accountability Protocol concept`
 - **Timestamp**: `2026-10-26T10:14:22+05:30`
 
+### [2026-10-26 15:28:45] Commit #116
+- **Message**: `feat(accountability): define Trash Badge tiers Bronze, Silver, Gold, Diamond`
+- **Timestamp**: `2026-10-26T15:28:45+05:30`
+
