@@ -476,3 +476,7 @@
 - **Message**: `feat(accountability): build TrashBadgeModal with penalty explanation`
 - **Timestamp**: `2026-10-27T15:28:45+05:30`
 
+### [2026-10-27 20:05:30] Commit #120
+- **Message**: `style(accountability): add harsh red glowing effects for active slacker badges`
+- **Timestamp**: `2026-10-27T20:05:30+05:30`
+
