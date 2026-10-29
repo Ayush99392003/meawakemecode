@@ -496,3 +496,7 @@
 - **Message**: `feat(cloud): setup Firebase Firestore client initialization`
 - **Timestamp**: `2026-10-29T10:14:22+05:30`
 
+### [2026-10-29 15:28:45] Commit #125
+- **Message**: `feat(cloud): implement sanitizeEmail helper for clean Firestore document keys`
+- **Timestamp**: `2026-10-29T15:28:45+05:30`
+
