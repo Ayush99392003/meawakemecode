@@ -544,3 +544,7 @@
 - **Message**: `feat(email): build BadgeEarnedEmail HTML template with verified diploma badge`
 - **Timestamp**: `2026-11-02T10:14:22+05:30`
 
+### [2026-11-02 15:28:45] Commit #137
+- **Message**: `feat(email): add direct CTA button deep-linking to user dashboard`
+- **Timestamp**: `2026-11-02T15:28:45+05:30`
+
