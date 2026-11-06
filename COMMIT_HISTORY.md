@@ -596,3 +596,7 @@
 - **Message**: `feat(queue): support background dispatch of welcome, badge, and warning emails`
 - **Timestamp**: `2026-11-06T15:28:45+05:30`
 
+### [2026-11-06 20:05:30] Commit #150
+- **Message**: `feat(settings): add email testing dispatch buttons on settings page`
+- **Timestamp**: `2026-11-06T20:05:30+05:30`
+
