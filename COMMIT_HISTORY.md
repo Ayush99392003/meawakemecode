@@ -600,3 +600,7 @@
 - **Message**: `feat(settings): add email testing dispatch buttons on settings page`
 - **Timestamp**: `2026-11-06T20:05:30+05:30`
 
+### [2026-11-07 10:14:22] Commit #151
+- **Message**: `fix(tables): fix markdown GFM table rendering in system design and CS modules`
+- **Timestamp**: `2026-11-07T10:14:22+05:30`
+
