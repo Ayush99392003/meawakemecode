@@ -608,3 +608,7 @@
 - **Message**: `fix(banner): resolve persistent cloud sync status banner on dashboard`
 - **Timestamp**: `2026-11-07T15:28:45+05:30`
 
+### [2026-11-07 20:05:30] Commit #153
+- **Message**: `fix(sync): implement direct Zustand store subscriber for real-time Firestore auto-sync`
+- **Timestamp**: `2026-11-07T20:05:30+05:30`
+
