@@ -232,6 +232,9 @@ const server = http.createServer(async (req, res) => {
         lastSweep: lastSweepStats,
         inFlightCount: inFlight.size,
         smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+        gmailWebAppConfigured: !!process.env.GMAIL_WEBAPP_URL,
+        brevoConfigured: !!process.env.BREVO_API_KEY,
+        resendConfigured: !!process.env.RESEND_API_KEY,
         timestamp: new Date().toISOString(),
       })
     );
