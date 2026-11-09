@@ -1,0 +1,62 @@
+import fs from "node:fs";
+import path from "node:path";
+
+export const dryRunTables = [
+  {
+    id: "trace_two_pointers",
+    day: 2,
+    theme: "Two Pointers",
+    algorithm: "Two Sum II (Input array is sorted)",
+    input: "nums = [2, 7, 11, 15], target = 18",
+    columns: ["Step", "Left Pointer", "Right Pointer", "nums[Left]", "nums[Right]", "Current Sum", "Decision & Mutation"],
+    rows: [
+      { step: 0, left: 0, right: 3, valLeft: 2, valRight: 15, currentSum: 17, decision: "17 < 18 (Too small). To increase sum, advance left pointer: left++ (0 -> 1)." },
+      { step: 1, left: 1, right: 3, valLeft: 7, valRight: 15, currentSum: 22, decision: "22 > 18 (Too large). To decrease sum, retreat right pointer: right-- (3 -> 2)." },
+      { step: 2, left: 1, right: 2, valLeft: 7, valRight: 11, currentSum: 18, decision: "18 == 18 (Target matched!). Return 1-based indices: [2, 3]." }
+    ],
+    takeaway: "Notice how monotonicity guarantees that we test each state in O(1) time and eliminate 1 candidate per step. Total time is bounded by N steps (O(N)), using strictly O(1) space."
+  },
+  {
+    id: "trace_sliding_window",
+    day: 3,
+    theme: "Sliding Window",
+    algorithm: "Minimum Size Subarray Sum >= S",
+    input: "nums = [2, 3, 1, 2, 4, 3], S = 7",
+    columns: ["Step", "Right", "Left", "Incoming Val", "Window Sum", "Window Size", "Decision & Action"],
+    rows: [
+      { step: 0, right: 0, left: 0, incoming: 2, windowSum: 2, windowSize: 1, decision: "Sum 2 < 7. Cannot shrink. Expand right." },
+      { step: 1, right: 1, left: 0, incoming: 3, windowSum: 5, windowSize: 2, decision: "Sum 5 < 7. Cannot shrink. Expand right." },
+      { step: 2, right: 2, left: 0, incoming: 1, windowSum: 6, windowSize: 3, decision: "Sum 6 < 7. Cannot shrink. Expand right." },
+      { step: 3, right: 3, left: 0, incoming: 2, windowSum: 8, windowSize: 4, decision: "Sum 8 >= 7! Update minLen = 4. Shrink left: subtract nums[0] (2) -> sum = 6, left = 1." },
+      { step: 4, right: 4, left: 1, incoming: 4, windowSum: 10, windowSize: 4, decision: "Sum 10 >= 7! minLen = 4. Shrink left: subtract nums[1] (3) -> sum = 7, left = 2." },
+      { step: 5, right: 4, left: 2, incoming: 0, windowSum: 7, windowSize: 3, decision: "Sum 7 >= 7! Update minLen = min(4, 3) = 3. Shrink left: subtract nums[2] (1) -> sum = 6, left = 3." },
+      { step: 6, right: 5, left: 3, incoming: 3, windowSum: 9, windowSize: 3, decision: "Sum 9 >= 7! minLen = 3. Shrink left: subtract nums[3] (2) -> sum = 7, left = 4." },
+      { step: 7, right: 5, left: 4, incoming: 0, windowSum: 7, windowSize: 2, decision: "Sum 7 >= 7! Update minLen = min(3, 2) = 2 ([4, 3]). Shrink left: subtract nums[4] (4) -> sum = 3, left = 5. Stop." }
+    ],
+    takeaway: "Right pointer advances N times; left pointer advances at most N times. Total iterations across inner and outer loops is 2N = O(N) amortized."
+  },
+  {
+    id: "trace_monotonic_stack",
+    day: 8,
+    theme: "Stacks & Monotonic Stack",
+    algorithm: "Next Greater Element (Daily Temperatures)",
+    input: "temperatures = [73, 74, 75, 71, 69, 72, 76, 73]",
+    columns: ["Step", "Index i", "Temp[i]", "Stack (Indices top->bottom)", "Popped Indices", "Action / Result Recorded"],
+    rows: [
+      { step: 0, i: 0, temp: 73, stack: "[]", popped: "None", decision: "Stack empty. Push index 0 (val 73). Stack: [0]." },
+      { step: 1, i: 1, temp: 74, stack: "[0]", popped: "0", decision: "74 > temp[0] (73). Pop 0! ans[0] = 1 - 0 = 1 day. Push 1. Stack: [1]." },
+      { step: 2, i: 2, temp: 75, stack: "[1]", popped: "1", decision: "75 > temp[1] (74). Pop 1! ans[1] = 2 - 1 = 1 day. Push 2. Stack: [2]." },
+      { step: 3, i: 3, temp: 71, stack: "[2]", popped: "None", decision: "71 <= temp[2] (75). Cannot pop. Push 3. Stack: [3, 2]." },
+      { step: 4, i: 4, temp: 69, stack: "[3, 2]", popped: "None", decision: "69 <= temp[3] (71). Push 4. Stack: [4, 3, 2]." },
+      { step: 5, i: 5, temp: 72, stack: "[4, 3, 2]", popped: "4, 3", decision: "72 > 69 (pop 4, ans[4]=1). 72 > 71 (pop 3, ans[3]=2). 72 <= 75 (stop). Push 5. Stack: [5, 2]." },
+      { step: 6, i: 6, temp: 76, stack: "[5, 2]", popped: "5, 2", decision: "76 > 72 (pop 5, ans[5]=1). 76 > 75 (pop 2, ans[2]=4). Stack empty. Push 6. Stack: [6]." },
+      { step: 7, i: 7, temp: 73, stack: "[6]", popped: "None", decision: "73 <= 76. Push 7. Stack: [7, 6]." }
+    ],
+    takeaway: "Every element is pushed once and popped at most once. Runtime is strictly O(N) with O(N) space."
+  }
+];
+
+const outDir = path.resolve("./data/practice");
+fs.writeFileSync(path.join(outDir, "dry_run_state_tables.json"), JSON.stringify(dryRunTables, null, 2));
+console.log(`Generated Dry Run Execution State Tables into data/practice/dry_run_state_tables.json`);
+

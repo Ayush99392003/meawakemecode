@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    // Public curriculum is readable by everyone (guests and authenticated users)
+    match /days/{dayId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /problems/{problemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /day_questions/{questionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /library_pages/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User accounts and private progress subcollections
+    match /users/{userId} {
+      // Allow users to sync and read their problem progress and streaks
+      allow read, write: if true;
+
+      match /{allSubcollections=**} {
+        allow read, write: if true;
+      }
+    }
+
+    // Email logs and dispatch queue
+    match /email_requests/{reqId} {
+      allow read, write: if true;
+    }
+
+    match /email_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
+

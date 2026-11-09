@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: meawakemecode-email-worker
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && cd frontend && npm install && cd .. && npm run build
+    startCommand: node frontend/email-worker.mjs
+    healthCheckPath: /health
+    envVars:
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: APP_BASE_URL
+        value: https://meawakemecode-8a35b.web.app
+      - key: PORT
+        value: 8080
+

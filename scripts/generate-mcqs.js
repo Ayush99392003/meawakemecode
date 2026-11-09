@@ -1,0 +1,353 @@
+import fs from "node:fs";
+import path from "node:path";
+
+export const mcqs = [
+  // Day 1: Arrays & Hash Maps
+  {
+    id: "mcq_day1_1",
+    dayId: "day_1",
+    topic: "Hash Map Collisions & Complexity",
+    question: "In C++, what is the worst-case time complexity of inserting N elements into std::unordered_map if all keys hash to the same bucket?",
+    codeSnippet: "std::unordered_map<int, int> mp;\nfor(int i = 0; i < n; i++) mp[i] = i;",
+    options: [
+      { key: "A", text: "O(1)" },
+      { key: "B", text: "O(log N)" },
+      { key: "C", text: "O(N^2) total (O(N) per insertion)" },
+      { key: "D", text: "O(N log N)" }
+    ],
+    correctOption: "C",
+    detailedExplanation: "Correct: C. When every key hashes to the same bucket, elements chain together in a linked list. Each insertion takes O(k) steps to check for duplicate keys. 1 + 2 + ... + N = O(N^2) total. On Codeforces, anti-hash tests exploit this to cause TLE unless custom_hash with splitmix64 is used.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+  {
+    id: "mcq_day1_2",
+    dayId: "day_1",
+    topic: "Two Sum Hash Map Traversal",
+    question: "Why does the single-pass hash map algorithm for Two Sum use complement lookup rather than two nested loops?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "It reduces time complexity from O(N^2) to O(N) by trading O(N) auxiliary space." },
+      { key: "B", text: "It sorts the array in O(N) time." },
+      { key: "C", text: "It uses O(1) memory." },
+      { key: "D", text: "Hash maps cannot handle negative numbers." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. Two nested loops take O(N^2) time to test all pairs. A hash map stores previously seen numbers and checks if target - current exists in O(1) average time, reducing overall runtime to O(N) while using O(N) space.",
+    difficulty: "easy",
+    orderIndex: 2
+  },
+
+  // Day 2: Two Pointers
+  {
+    id: "mcq_day2_1",
+    dayId: "day_2",
+    topic: "Two Pointers on Sorted Arrays",
+    question: "Why must an array be sorted before applying the converging two-pointer technique for Two Sum II?",
+    codeSnippet: "while (left < right) {\n  int sum = nums[left] + nums[right];\n  if (sum == target) return {left, right};\n  else if (sum < target) left++;\n  else right--;\n}",
+    options: [
+      { key: "A", text: "Sorting guarantees monotonicity: advancing left strictly increases sum, and retreating right strictly decreases sum." },
+      { key: "B", text: "Sorting eliminates all duplicate numbers." },
+      { key: "C", text: "Two pointers only compile on sorted memory buffers in C++." },
+      { key: "D", text: "Two pointers require O(N log N) space." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. The monotonicity of sorted values guarantees that if current sum < target, incrementing left increases the sum; if sum > target, decrementing right decreases it. Without sorted order, the greedy pointer movements would discard potential valid pairs.",
+    difficulty: "easy",
+    orderIndex: 1
+  },
+
+  // Day 3: Sliding Window
+  {
+    id: "mcq_day3_1",
+    dayId: "day_3",
+    topic: "Sliding Window Invariant",
+    question: "What is the amortized time complexity of the dynamic sliding window pattern on an array of length N when left and right pointers both advance?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "O(N^2) because of the inner while loop shrinking the window" },
+      { key: "B", text: "O(N) because each pointer visits each element at most once" },
+      { key: "C", text: "O(N log N) because of window resizing" },
+      { key: "D", text: "O(K) where K is the alphabet size" }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. Even though there is an inner loop that increments the left pointer, left never moves backward. Across the entire execution, the right pointer advances N times and the left pointer advances at most N times. Total operations are bounded by 2N = O(N).",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 4: Prefix Sum
+  {
+    id: "mcq_day4_1",
+    dayId: "day_4",
+    topic: "Subarray Sum Equals K",
+    question: "In LeetCode 560 (Subarray Sum Equals K), why do we initialize the prefix sum frequency map with {0: 1} before iterating?",
+    codeSnippet: "map<int, int> prefixCounts;\nprefixCounts[0] = 1;",
+    options: [
+      { key: "A", text: "To prevent division by zero in hashing." },
+      { key: "B", text: "To account for valid subarrays that start from index 0 whose sum exactly equals K." },
+      { key: "C", text: "To handle empty input arrays without throwing NullPointerException." },
+      { key: "D", text: "Because 0 is the identity element of multiplication." }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. When current prefixSum equals K, prefixSum - K = 0. Initializing {0: 1} ensures that a subarray starting at index 0 (with no prefix to subtract) is correctly counted as 1 valid match.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 5: Binary Search on Arrays
+  {
+    id: "mcq_day5_1",
+    dayId: "day_5",
+    topic: "Integer Overflow in Binary Search",
+    question: "Why is mid calculated as `low + (high - low) / 2` instead of `(low + high) / 2` in Java and C++?",
+    codeSnippet: "int mid = low + (high - low) / 2;",
+    options: [
+      { key: "A", text: "It prevents signed 32-bit integer overflow when low + high exceeds 2^31 - 1." },
+      { key: "B", text: "It runs faster on x86 processors due to bit shifting." },
+      { key: "C", text: "It ensures mid is always rounded up rather than down." },
+      { key: "D", text: "It avoids division by zero." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. If low and high are both close to Integer.MAX_VALUE (e.g. 2 * 10^9), low + high overflows into negative numbers, causing an ArrayIndexOutOfBoundsException or illegal memory access. low + (high - low) / 2 avoids overflow while producing the exact same mathematical midpoint.",
+    difficulty: "easy",
+    orderIndex: 1
+  },
+
+  // Day 6: Binary Search on Answer Space
+  {
+    id: "mcq_day6_1",
+    dayId: "day_6",
+    topic: "Monotonic Predicates",
+    question: "When applying binary search on answer space (e.g., Koko Eating Bananas), what mathematical property must the condition function f(x) satisfy?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "f(x) must be continuous and differentiable." },
+      { key: "B", text: "f(x) must be monotonic (e.g., FFF...FTTT...T) across the search space." },
+      { key: "C", text: "f(x) must be strictly convex." },
+      { key: "D", text: "The domain of f(x) must contain only prime numbers." }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. Binary search on answer space works if and only if the feasibility check function is monotonic: once a speed or capacity x works, all greater speeds x' > x also work (or vice versa). This guarantees that evaluating the midpoint allows discarding half the search domain.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 7: Bit Manipulation
+  {
+    id: "mcq_day7_1",
+    dayId: "day_7",
+    topic: "Brian Kernighan's Algorithm",
+    question: "What does the expression `n = n & (n - 1)` do to an integer n?",
+    codeSnippet: "while (n != 0) {\n  n = n & (n - 1);\n  count++;\n}",
+    options: [
+      { key: "A", text: "Inverts all bits of n." },
+      { key: "B", text: "Clears the lowest (rightmost) set bit of n." },
+      { key: "C", text: "Multiplies n by 2." },
+      { key: "D", text: "Checks whether n is odd." }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. Subtracting 1 flips all bits up to and including the lowest set bit. Bitwise ANDing n with n - 1 clears that lowest set bit while leaving all higher bits unchanged. This counts set bits in O(number of 1s) rather than O(32).",
+    difficulty: "easy",
+    orderIndex: 1
+  },
+
+  // Day 8: Stacks & Monotonic Stack
+  {
+    id: "mcq_day8_1",
+    dayId: "day_8",
+    topic: "Monotonic Stack Direction",
+    question: "To find the Next Greater Element for each position in an array, what invariant must the monotonic stack maintain?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "Monotonic strictly increasing (smallest at bottom, largest at top)." },
+      { key: "B", text: "Monotonic strictly decreasing from bottom to top; pop when current element is greater." },
+      { key: "C", text: "FIFO ordering with two queues." },
+      { key: "D", text: "Randomized ordering with splitmix64." }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. When traversing, keeping elements in decreasing order allows any incoming larger element to pop all smaller predecessors—resolving their 'next greater' query immediately.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 10: Linked List Patterns
+  {
+    id: "mcq_day10_1",
+    dayId: "day_10",
+    topic: "Floyd's Cycle Finding",
+    question: "In Floyd's Cycle-Finding Algorithm (Tortoise and Hare), if the cycle has length C and the non-cycle head length is L, why are slow and fast guaranteed to meet in O(L + C) steps?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "Because the relative distance between fast and slow decreases by exactly 1 each step once both are inside the cycle." },
+      { key: "B", text: "Because fast pointer stops and waits for slow." },
+      { key: "C", text: "Because linked lists have cache locality." },
+      { key: "D", text: "Because slow pointer moves backwards." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. Fast moves at 2 steps/round and slow moves at 1 step/round. Once both are inside the cycle, relative to slow, fast closes the gap by 1 node per iteration. Hence they must meet in at most C steps after entering the cycle.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 12: Binary Trees DFS
+  {
+    id: "mcq_day12_1",
+    dayId: "day_12",
+    topic: "Binary Tree DFS Space Complexity",
+    question: "What is the worst-case space complexity of recursive DFS on a binary tree with N nodes?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "O(1)" },
+      { key: "B", text: "O(log N)" },
+      { key: "C", text: "O(N) when the tree degenerates into a skewed line (linked list)" },
+      { key: "D", text: "O(N^2)" }
+    ],
+    correctOption: "C",
+    detailedExplanation: "Correct: C. Space complexity of recursive DFS is proportional to the tree height H. In a balanced tree H = O(log N), but in a degenerate/skewed tree H = O(N), requiring O(N) call stack frames.",
+    difficulty: "easy",
+    orderIndex: 1
+  },
+
+  // Day 14: BST
+  {
+    id: "mcq_day14_1",
+    dayId: "day_14",
+    topic: "BST Invariant Trap",
+    question: "Why is checking only `node.val > node.left.val && node.val < node.right.val` insufficient to validate a Binary Search Tree?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "It only checks immediate children; a node in the right subtree could be smaller than a higher ancestor." },
+      { key: "B", text: "BSTs allow duplicates on both sides." },
+      { key: "C", text: "It fails on negative numbers." },
+      { key: "D", text: "BST nodes must have 3 children." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. A classic trap! Consider a root with value 10, right child 15, and right child's left child 6. Locally 15 > 6, but 6 is in the right subtree of 10 (violation!). One must pass (minVal, maxVal) bounds down the recursion.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 15: Heaps
+  {
+    id: "mcq_day15_1",
+    dayId: "day_15",
+    topic: "Kth Largest via Min-Heap",
+    question: "To find the Kth largest element in an unsorted stream of N elements, why do we use a MIN-heap of size K instead of a MAX-heap?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "A min-heap of size K keeps the K largest elements seen so far, with the smallest of those K (the Kth largest overall) at the root in O(1) access." },
+      { key: "B", text: "Max-heaps cannot be implemented in Java." },
+      { key: "C", text: "Min-heaps use O(1) space." },
+      { key: "D", text: "Max-heaps take O(N^2) to insert." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. When maintaining K largest elements in a min-heap, the root is the minimum among the top K. Any element smaller than root is discarded; any larger replaces root. The root is always the Kth largest in O(1) time.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 17: DP 1D
+  {
+    id: "mcq_day17_1",
+    dayId: "day_17",
+    topic: "Space Optimization in DP",
+    question: "In the Fibonacci or Climbing Stairs DP where `dp[i] = dp[i-1] + dp[i-2]`, how can space complexity be optimized from O(N) to O(1)?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "By using two rolling variables (prev1, prev2) instead of a full array of size N." },
+      { key: "B", text: "By using a HashMap with splitmix64." },
+      { key: "C", text: "By using tail recursion without memoization." },
+      { key: "D", text: "By sorting the input array." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. Since computing state i only requires states i - 1 and i - 2, we only need to keep two variables in memory and update them iteratively, reducing space from O(N) to O(1).",
+    difficulty: "easy",
+    orderIndex: 1
+  },
+
+  // Day 20: 0/1 Knapsack
+  {
+    id: "mcq_day20_1",
+    dayId: "day_20",
+    topic: "0/1 Knapsack 1D Loop Direction",
+    question: "When compressing a 0/1 Knapsack DP table to a 1D array `dp[w]`, why must the capacity w be iterated in REVERSE (from W down to weight[i])?",
+    codeSnippet: "for (int w = W; w >= weight[i]; w--) {\n  dp[w] = max(dp[w], dp[w - weight[i]] + value[i]);\n}",
+    options: [
+      { key: "A", text: "To prevent the same item from being used multiple times in the same round (unbounded behavior)." },
+      { key: "B", text: "To optimize cache line pre-fetching on Intel CPUs." },
+      { key: "C", text: "Because arrays cannot be indexed from 0 in C++." },
+      { key: "D", text: "To sort the weights automatically." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. A critical interview distinction! If you iterate forwards, `dp[w - weight[i]]` has already been updated with the current item, allowing the item to be picked repeatedly (unbounded knapsack). Iterating backwards ensures `dp[w - weight[i]]` still holds the value from the previous item.",
+    difficulty: "hard",
+    orderIndex: 1
+  },
+
+  // Day 24: Topological Sort
+  {
+    id: "mcq_day24_1",
+    dayId: "day_24",
+    topic: "Kahn's Algorithm Cycle Detection",
+    question: "In Kahn's Algorithm for Topological Sort, how do we know if a directed graph contains a cycle?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "If the number of nodes dequeued and added to the topological order is strictly less than the total number of vertices V." },
+      { key: "B", text: "If the adjacency list has an odd number of edges." },
+      { key: "C", text: "If all nodes have an indegree of 0 at the start." },
+      { key: "D", text: "If the graph cannot be colored using 2 colors." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. Nodes in a directed cycle always have an indegree >= 1 (each node in the cycle is pointed to by another node in the cycle). None of them ever reach indegree 0 to enter the queue. If processed nodes < V, a cycle exists.",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 26: DSU
+  {
+    id: "mcq_day26_1",
+    dayId: "day_26",
+    topic: "DSU Path Compression & Union by Rank",
+    question: "What is the amortized time complexity per operation for Disjoint Set Union (DSU) when both Path Compression and Union by Rank are used?",
+    codeSnippet: "int find(int i) {\n  if (parent[i] == i) return i;\n  return parent[i] = find(parent[i]);\n}",
+    options: [
+      { key: "A", text: "O(1) strictly worst case." },
+      { key: "B", text: "O(alpha(N)) where alpha is the Inverse Ackermann function (practically <= 4 for any universe size)." },
+      { key: "C", text: "O(log N)." },
+      { key: "D", text: "O(N)." }
+    ],
+    correctOption: "B",
+    detailedExplanation: "Correct: B. Tarjan proved that path compression combined with union by rank/size achieves O(alpha(N)) amortized time per operation. The inverse Ackermann function grows so slowly that alpha(N) < 5 for any practical input size (even 10^80).",
+    difficulty: "medium",
+    orderIndex: 1
+  },
+
+  // Day 30: System Design & Integration
+  {
+    id: "mcq_day30_1",
+    dayId: "day_30",
+    topic: "LRU Cache Design",
+    question: "In designing an LRU Cache with O(1) get and O(1) put operations, why is a Doubly Linked List paired with a Hash Map?",
+    codeSnippet: null,
+    options: [
+      { key: "A", text: "The hash map provides O(1) key lookup, and the doubly linked list allows O(1) node removal and insertion at the head." },
+      { key: "B", text: "Doubly linked lists automatically sort items." },
+      { key: "C", text: "A singly linked list cannot store integers." },
+      { key: "D", text: "Hash maps require doubly linked lists to resolve hash collisions." }
+    ],
+    correctOption: "A",
+    detailedExplanation: "Correct: A. A singly linked list requires O(N) traversal to find the predecessor when deleting a middle node. A doubly linked list has `prev` and `next` pointers, enabling O(1) node removal and re-attachment to the MRU head, while the hash map gives O(1) direct node reference.",
+    difficulty: "medium",
+    orderIndex: 1
+  }
+];
+
+const outDir = path.resolve("./data/mcqs");
+if (!fs.existsSync(outDir)) {
+  fs.mkdirSync(outDir, { recursive: true });
+}
+
+fs.writeFileSync(path.join(outDir, "mcqs_catalog.json"), JSON.stringify(mcqs, null, 2));
+console.log(`Successfully generated ${mcqs.length} high-yield MCQs into data/mcqs/mcqs_catalog.json`);
+
