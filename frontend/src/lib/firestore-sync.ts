@@ -149,25 +149,58 @@ export function mergeProgressStates(
   };
 }
 
+export const RENDER_WORKER_URL = "https://meawakemecode.onrender.com";
+
 /**
- * Queue an email dispatch in Firestore `email_requests` collection
+ * Queue or immediately dispatch an email via Render backend API with Firestore fallback
  */
 export async function queueEmailRequest(
   recipient: string,
   type: "daily" | "badge" | "trash_warning" | "accountability" | "welcome",
   payload: Record<string, any>
 ): Promise<boolean> {
-  if (!recipient || !recipient.includes("@") || !db) return false;
+  const cleanTo = recipient.trim().toLowerCase();
+  if (!cleanTo || !cleanTo.includes("@")) return false;
+
+  // 1. Direct instantaneous dispatch via Render Worker API
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch(`${RENDER_WORKER_URL}/api/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: cleanTo, type, payload }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        console.log(`[Mail Client] Dispatched instantly via Render worker: ${data.messageId}`);
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn("[Mail Client] Direct Render dispatch skipped, queueing to Firestore:", err);
+  }
+
+  // 2. Fallback: Save to Firestore email_requests collection
+  if (!db) return false;
   try {
     const queueRef = collection(db, "email_requests");
     await addDoc(queueRef, {
-      to: recipient.trim().toLowerCase(),
+      to: cleanTo,
       type,
       payload,
       status: "pending",
       requestedAt: serverTimestamp(),
       createdAtIso: new Date().toISOString(),
     });
+
+    // Background trigger for Render worker
+    fetch(`${RENDER_WORKER_URL}/process`, { method: "GET" }).catch(() => {});
     return true;
   } catch (err) {
     console.error("Failed to queue email request in Firestore:", err);

@@ -151,9 +151,73 @@ onSnapshot(
 // 2. Periodic polling every 5 seconds as fail-safe
 setInterval(sweepQueue, 5000);
 
-// 3. HTTP Server with /health and /process endpoints
+// 3. HTTP Server with CORS, /health, /process, and /api/send-email endpoints
 const PORT = process.env.PORT || 8080;
 const server = http.createServer(async (req, res) => {
+  // Enable CORS for all incoming frontend requests
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.url === "/api/send-email" && req.method === "POST") {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", async () => {
+      try {
+        const { to, type, payload } = JSON.parse(body || "{}");
+        if (!to || !to.includes("@")) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: false, error: "Invalid recipient email" }));
+          return;
+        }
+
+        console.log(`\n[HTTP API] 📨 Direct dispatch request: ${to} (${type})`);
+        let result;
+        if (type === "welcome" || payload?.type === "welcome" || payload?.type === "sync_welcome") {
+          result = await sendWelcomeNotification(to);
+        } else if (type === "badge") {
+          result = await sendBadgeNotification(
+            to,
+            payload?.badgeTitle || "Day Milestone Badge",
+            payload?.badgeType || "day",
+            payload || {}
+          );
+        } else if (type === "trash_warning") {
+          result = await sendTrashWarningNotification(
+            to,
+            payload?.dayNumber || 1,
+            payload?.hoursLeft || 3,
+            payload?.currentStreak || 0
+          );
+        } else if (type === "accountability") {
+          result = await sendToughLoveNotification(
+            to,
+            payload?.missedDay || 1,
+            payload?.missedCount || 1,
+            payload?.roastQuote
+          );
+        } else {
+          result = await sendWelcomeNotification(to);
+        }
+
+        console.log(`[HTTP API] Result for ${to}:`, result);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        console.error("[HTTP API] Error:", err);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
   if (req.url === "/process") {
     console.log("[Worker] Manual sweep requested via HTTP /process");
     const results = await sweepQueue();
