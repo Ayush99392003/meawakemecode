@@ -5,6 +5,7 @@ import {
   collection,
   query,
   where,
+  getDocs,
   onSnapshot,
   doc,
   updateDoc,
@@ -30,15 +31,143 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Lightweight HTTP server for Cloud Health Checks (Render, Railway, Koyeb, Fly.io)
+const queueRef = collection(db, "email_requests");
+const q = query(queueRef, where("status", "==", "pending"));
+
+// In-flight tracking to prevent duplicate dispatch
+const inFlight = new Set();
+let lastSweepStats = { at: new Date().toISOString(), processed: 0, errors: 0 };
+
+async function processSingleDoc(docSnap) {
+  const reqId = docSnap.id;
+  const data = docSnap.data();
+
+  if (data.status !== "pending" || inFlight.has(reqId)) return null;
+  inFlight.add(reqId);
+
+  const to = data.to;
+  const type = data.type;
+  const payload = data.payload || {};
+  const docRef = doc(db, "email_requests", reqId);
+
+  console.log(`\n[Worker] 📨 Processing request: ${reqId} for ${to} (${type})`);
+
+  try {
+    let result;
+    if (type === "welcome" || payload.type === "welcome" || payload.type === "sync_welcome") {
+      result = await sendWelcomeNotification(to);
+    } else if (type === "badge") {
+      result = await sendBadgeNotification(
+        to,
+        payload.badgeTitle || "Day Milestone Badge",
+        payload.badgeType || "day",
+        payload
+      );
+    } else if (type === "trash_warning") {
+      result = await sendTrashWarningNotification(
+        to,
+        payload.dayNumber || 1,
+        payload.hoursLeft || 3,
+        payload.currentStreak || 0
+      );
+    } else if (type === "accountability") {
+      result = await sendToughLoveNotification(
+        to,
+        payload.missedDay || 1,
+        payload.missedCount || 1,
+        payload.roastQuote
+      );
+    } else {
+      result = await sendWelcomeNotification(to);
+    }
+
+    if (result.success) {
+      await updateDoc(docRef, {
+        status: "sent",
+        messageId: result.messageId || null,
+        processedAt: serverTimestamp(),
+      });
+      console.log(`[Worker] ✅ Sent to ${to}. MessageId: ${result.messageId}`);
+      return { id: reqId, to, status: "sent", messageId: result.messageId };
+    } else {
+      await updateDoc(docRef, {
+        status: "failed",
+        error: result.error || "Delivery error",
+        processedAt: serverTimestamp(),
+      });
+      console.error(`[Worker] ❌ Failed to ${to}:`, result.error);
+      return { id: reqId, to, status: "failed", error: result.error };
+    }
+  } catch (err) {
+    console.error(`[Worker] ❌ Exception on ${reqId}:`, err);
+    try {
+      await updateDoc(docRef, {
+        status: "failed",
+        error: err?.message || String(err),
+        processedAt: serverTimestamp(),
+      });
+    } catch {}
+    return { id: reqId, to, status: "failed", error: err?.message };
+  } finally {
+    inFlight.delete(reqId);
+  }
+}
+
+async function sweepQueue() {
+  try {
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return [];
+
+    const results = [];
+    for (const d of snapshot.docs) {
+      const res = await processSingleDoc(d);
+      if (res) results.push(res);
+    }
+    lastSweepStats = { at: new Date().toISOString(), processed: results.length, errors: 0 };
+    return results;
+  } catch (err) {
+    console.error("[Worker] Sweep error:", err);
+    lastSweepStats = { at: new Date().toISOString(), processed: 0, errors: 1 };
+    return [];
+  }
+}
+
+// 1. Real-time onSnapshot listener
+onSnapshot(
+  q,
+  async (snapshot) => {
+    if (snapshot.empty) return;
+    for (const change of snapshot.docChanges()) {
+      if (change.type === "added" || change.type === "modified") {
+        await processSingleDoc(change.doc);
+      }
+    }
+  },
+  (err) => {
+    console.error("[Worker] onSnapshot error:", err);
+  }
+);
+
+// 2. Periodic polling every 5 seconds as fail-safe
+setInterval(sweepQueue, 5000);
+
+// 3. HTTP Server with /health and /process endpoints
 const PORT = process.env.PORT || 8080;
-const server = http.createServer((req, res) => {
-  if (req.url === "/health" || req.url === "/") {
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/process") {
+    console.log("[Worker] Manual sweep requested via HTTP /process");
+    const results = await sweepQueue();
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", processedCount: results.length, results }));
+  } else if (req.url === "/health" || req.url === "/") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
         status: "healthy",
         service: "meawakemecode-email-worker",
+        lastSweep: lastSweepStats,
+        inFlightCount: inFlight.size,
+        smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
         timestamp: new Date().toISOString(),
       })
     );
@@ -49,102 +178,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[Health Server] Listening on port ${PORT} (health check active)`);
+  console.log("==================================================");
+  console.log("⚡ meawakemecode Real-time Email Dispatcher Daemon");
+  console.log(`[Health Server] Listening on port ${PORT}`);
+  console.log(`[SMTP Configured]: ${!!(process.env.SMTP_USER && process.env.SMTP_PASS)}`);
+  console.log("==================================================");
 });
-
-console.log("==================================================");
-console.log("⚡ meawakemecode Real-time Email Dispatcher Daemon");
-console.log("Listening for incoming `email_requests` (status: pending)...");
-console.log("==================================================");
-
-const queueRef = collection(db, "email_requests");
-const q = query(queueRef, where("status", "==", "pending"));
-
-// In-flight tracking to prevent duplicate dispatch in real-time listeners
-const inFlight = new Set();
-
-onSnapshot(
-  q,
-  async (snapshot) => {
-    if (snapshot.empty) return;
-
-    for (const docChange of snapshot.docChanges()) {
-      if (docChange.type === "added" || docChange.type === "modified") {
-        const docSnap = docChange.doc;
-        const reqId = docSnap.id;
-        const data = docSnap.data();
-
-        if (data.status !== "pending" || inFlight.has(reqId)) continue;
-        inFlight.add(reqId);
-
-        const to = data.to;
-        const type = data.type;
-        const payload = data.payload || {};
-        const docRef = doc(db, "email_requests", reqId);
-
-        console.log(`\n[Realtime Worker] 📨 New request detected: ${reqId}`);
-        console.log(`[Realtime Worker] Recipient: ${to} | Type: ${type}`);
-
-        try {
-          let result;
-          if (type === "welcome" || payload.type === "welcome" || payload.type === "sync_welcome") {
-            result = await sendWelcomeNotification(to);
-          } else if (type === "badge") {
-            result = await sendBadgeNotification(
-              to,
-              payload.badgeTitle || "Day Milestone Badge",
-              payload.badgeType || "day",
-              payload
-            );
-          } else if (type === "trash_warning") {
-            result = await sendTrashWarningNotification(
-              to,
-              payload.dayNumber || 1,
-              payload.hoursLeft || 3,
-              payload.currentStreak || 0
-            );
-          } else if (type === "accountability") {
-            result = await sendToughLoveNotification(
-              to,
-              payload.missedDay || 1,
-              payload.missedCount || 1,
-              payload.roastQuote
-            );
-          } else {
-            result = await sendWelcomeNotification(to);
-          }
-
-          if (result.success) {
-            await updateDoc(docRef, {
-              status: "sent",
-              messageId: result.messageId || null,
-              processedAt: serverTimestamp(),
-            });
-            console.log(`[Realtime Worker] ✅ Sent to ${to}. MessageId: ${result.messageId}`);
-          } else {
-            await updateDoc(docRef, {
-              status: "failed",
-              error: result.error || "Unknown delivery failure",
-              processedAt: serverTimestamp(),
-            });
-            console.error(`[Realtime Worker] ❌ Delivery failed to ${to}:`, result.error);
-          }
-        } catch (err) {
-          console.error(`[Realtime Worker] ❌ Exception for ${reqId}:`, err);
-          try {
-            await updateDoc(docRef, {
-              status: "failed",
-              error: err?.message || String(err),
-              processedAt: serverTimestamp(),
-            });
-          } catch {}
-        } finally {
-          inFlight.delete(reqId);
-        }
-      }
-    }
-  },
-  (err) => {
-    console.error("[Realtime Worker] Firestore onSnapshot listener error:", err);
-  }
-);
