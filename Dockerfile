@@ -1,22 +1,20 @@
 # Production Dockerfile for meawakemecode Email Worker Daemon
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy root and frontend dependency files
+# Copy root dependency files
 COPY package*.json ./
-COPY frontend/package*.json ./frontend/
 
-# Install root dependencies
-RUN npm ci || npm install
+# Install root backend dependencies
+RUN npm install
 
-# Install frontend dependencies
-RUN cd frontend && (npm ci || npm install)
+# Copy backend TypeScript sources, configs, and scripts
+COPY tsconfig.json ./
+COPY src ./src
+COPY scripts ./scripts
 
-# Copy all source files
-COPY . .
-
-# Build root TypeScript into dist/
+# Build TypeScript to dist/
 RUN npm run build
 
 # Expose HTTP health check port
@@ -24,5 +22,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run email worker daemon with health check server
-CMD ["node", "frontend/email-worker.mjs"]
-
+CMD ["node", "scripts/email-worker.mjs"]
