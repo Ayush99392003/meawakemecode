@@ -77,4 +77,30 @@ export async function sendWelcomeNotification(toEmail: string) {
   });
 }
 
+export async function sendDailyItineraryNotification(
+  toEmail: string,
+  day: { number: number; theme: string; summary: string },
+  problems: Array<{ title: string; platform: string; difficulty: string; url: string; expectedTimeComplexity?: string | null }>,
+  streaks: { currentStreak: number; longestStreak: number } = { currentStreak: 0, longestStreak: 0 }
+) {
+  const email = EmailTemplateService.buildDailyItineraryEmail(
+    { email: toEmail },
+    day,
+    problems,
+    streaks,
+    process.env.APP_BASE_URL || "https://meawakemecode-8a35b.web.app"
+  );
+  console.log(`[Email Dispatcher] Sending Daily Itinerary Email to ${toEmail}: ${email.subject}`);
+  return await sender({
+    to: toEmail,
+    subject: email.subject,
+    type: "daily_reminder",
+    body: email.text,
+    html: email.html,
+    text: email.text,
+    deepLink: `https://meawakemecode-8a35b.web.app/day/${day.number}`,
+  });
+}
+
+
 

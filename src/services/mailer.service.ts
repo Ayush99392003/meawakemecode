@@ -3,35 +3,73 @@ import { EmailDispatchPayload } from "./notification.service.js";
 
 export function createSmtpSender() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT) || 587;
+  const port = Number(process.env.SMTP_PORT) || (process.env.SMTP_SECURE === "true" ? 465 : 587);
+  const isSecure = port === 465;
   const user = process.env.SMTP_USER || "";
   const pass = process.env.SMTP_PASS || "";
   const from = process.env.EMAIL_FROM || (user ? `"meawakemecode" <${user}>` : "noreply@meawakemecode.com");
 
-  // HTTPS-based gateways (bypass Render Free Tier SMTP port 25/465/587 blocks)
+  // Optional HTTPS gateways as fallback
   const gmailWebAppUrl = process.env.GMAIL_WEBAPP_URL || "";
   const brevoApiKey = process.env.BREVO_API_KEY || "";
   const resendApiKey = process.env.RESEND_API_KEY || "";
 
-  const transporter = nodemailer.createTransport({
+  // Configure SMTP transport with robust timeouts and TLS options
+  const isGmail = host === "smtp.gmail.com" || (!process.env.SMTP_HOST && user.endsWith("@gmail.com"));
+  const transportConfig: any = {
     host,
     port,
-    secure: port === 465,
+    secure: isSecure,
     auth: {
       user,
       pass,
     },
-    // Strict timeouts to prevent silent hanging on restricted cloud firewalls
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
+    tls: {
+      rejectUnauthorized: false, // Prevents certificate chain issues on cloud networks
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+  };
+
+  // If using Gmail on port 465 or default, nodemailer's built-in service config optimizes socket settings
+  if (isGmail && isSecure) {
+    transportConfig.service = "gmail";
+  }
+
+  const transporter = nodemailer.createTransport(transportConfig);
 
   return async (payload: EmailDispatchPayload) => {
-    // 1. Google Apps Script HTTPS Gateway (Sends directly from meawakemecode@gmail.com over HTTPS 443)
+    // 1. Primary: Standard SMTP Transport
+    if (user && pass) {
+      try {
+        console.log(`[Mailer] 📤 Attempting SMTP dispatch to ${payload.to} via ${host}:${port} (secure: ${isSecure})...`);
+        const info = await transporter.sendMail({
+          from,
+          to: payload.to,
+          subject: payload.subject,
+          text: payload.text || payload.body,
+          html: payload.html,
+        });
+        console.log(`[Mailer] ✅ SMTP sent successfully to ${payload.to}! MessageId: ${info.messageId}`);
+        return { success: true, messageId: info.messageId };
+      } catch (err: any) {
+        console.error(`[Mailer] ⚠️ SMTP dispatch failed to ${payload.to}:`, err?.code || err?.message || err);
+        // If no fallback is available, return the error directly
+        if (!gmailWebAppUrl && !brevoApiKey && !resendApiKey) {
+          return {
+            success: false,
+            error: `SMTP Error (${err?.code || "FAILED"}): ${err?.message || String(err)}`,
+          };
+        }
+        console.log("[Mailer] Attempting configured HTTPS fallback...");
+      }
+    }
+
+    // 2. Fallback: Google Apps Script Webhook (Port 443 HTTPS)
     if (gmailWebAppUrl) {
       try {
-        console.log(`[Mailer] Dispatching via Google Apps Script HTTPS Gateway...`);
+        console.log(`[Mailer] 🌐 Dispatching via Google Apps Script HTTPS Gateway...`);
         const res = await fetch(gmailWebAppUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -46,18 +84,17 @@ export function createSmtpSender() {
         const data = await res.json().catch(() => ({ success: res.ok }));
         if (data.success || res.ok) {
           console.log(`[Mailer] ✅ Sent via Google Apps Script Gateway to ${payload.to}`);
-          return { success: true, messageId: data.messageId || "gas-" + Date.now() };
+          return { success: true, messageId: data.messageId || `gas-${Date.now()}` };
         }
-        console.warn(`[Mailer] Google Apps Script Gateway error:`, data.error || res.statusText);
       } catch (err: any) {
-        console.error(`[Mailer] Google Apps Script dispatch failed:`, err?.message || err);
+        console.error(`[Mailer] Google Apps Script fallback failed:`, err?.message);
       }
     }
 
-    // 2. Brevo HTTPS API (port 443, 300 free emails/day)
+    // 3. Fallback: Brevo HTTPS REST API (Port 443)
     if (brevoApiKey) {
       try {
-        console.log(`[Mailer] Dispatching via Brevo HTTPS API...`);
+        console.log(`[Mailer] 🌐 Dispatching via Brevo HTTPS API...`);
         const res = await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
@@ -74,19 +111,18 @@ export function createSmtpSender() {
         });
         const data = await res.json();
         if (res.ok) {
-          console.log(`[Mailer] ✅ Sent via Brevo to ${payload.to}:`, data.messageId);
+          console.log(`[Mailer] ✅ Sent via Brevo to ${payload.to}: ${data.messageId}`);
           return { success: true, messageId: data.messageId };
         }
-        console.warn(`[Mailer] Brevo API error:`, data);
       } catch (err: any) {
-        console.error(`[Mailer] Brevo dispatch failed:`, err?.message || err);
+        console.error(`[Mailer] Brevo fallback failed:`, err?.message);
       }
     }
 
-    // 3. Resend HTTPS API (port 443)
+    // 4. Fallback: Resend HTTPS REST API (Port 443)
     if (resendApiKey) {
       try {
-        console.log(`[Mailer] Dispatching via Resend HTTPS API...`);
+        console.log(`[Mailer] 🌐 Dispatching via Resend HTTPS API...`);
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -103,34 +139,17 @@ export function createSmtpSender() {
         });
         const data = await res.json();
         if (res.ok) {
-          console.log(`[Mailer] ✅ Sent via Resend to ${payload.to}:`, data.id);
+          console.log(`[Mailer] ✅ Sent via Resend to ${payload.to}: ${data.id}`);
           return { success: true, messageId: data.id };
         }
-        console.warn(`[Mailer] Resend API error:`, data);
       } catch (err: any) {
-        console.error(`[Mailer] Resend dispatch failed:`, err?.message || err);
+        console.error(`[Mailer] Resend fallback failed:`, err?.message);
       }
     }
 
-    // 4. Default SMTP Transport (Nodemailer)
-    try {
-      console.log(`[Mailer] Attempting standard SMTP transport (${host}:${port})...`);
-      const info = await transporter.sendMail({
-        from,
-        to: payload.to,
-        subject: payload.subject,
-        text: payload.text || payload.body,
-        html: payload.html,
-      });
-      console.log(`[Mailer] ✅ Sent via SMTP to ${payload.to}: ${info.messageId}`);
-      return { success: true, messageId: info.messageId };
-    } catch (err: any) {
-      console.error("[Mailer] ❌ SMTP dispatch failed:", err?.message || String(err));
-      return {
-        success: false,
-        error: `SMTP Error (${err?.code || "TIMED_OUT"}): ${err?.message || String(err)}. Note: Render Free tier blocks outbound SMTP ports 25, 465, and 587. Set GMAIL_WEBAPP_URL or BREVO_API_KEY to send via HTTPS.`,
-      };
-    }
+    return {
+      success: false,
+      error: "No email sender succeeded. Verify SMTP credentials or configure an HTTPS fallback.",
+    };
   };
 }
-
