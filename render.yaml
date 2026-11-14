@@ -17,7 +17,7 @@ services:
       - key: SMTP_SECURE
         value: true
       - key: GMAIL_WEBAPP_URL
-        sync: false
+        value: https://script.google.com/macros/s/AKfycbwsiuiJYqzysOeV59BB8QvSPPZ9ywYpOd2fXIQcu18cOI8gpaT3iXT_oCSafcCXupHwvg/exec
       - key: BREVO_API_KEY
         sync: false
       - key: RESEND_API_KEY
