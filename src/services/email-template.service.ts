@@ -8,7 +8,7 @@ export interface FormattedEmail {
 
 export class EmailTemplateService {
   /**
-   * 1. Daily Curriculum Itinerary Email
+   * 1. Daily Curriculum Itinerary Email (Already proven to land in Primary Inbox!)
    */
   static buildDailyItineraryEmail(
     user: { id?: string; email: string; unsubscribeToken?: string },
@@ -49,7 +49,7 @@ export class EmailTemplateService {
 
     const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head><meta charset="utf-8"><title>${subject}</title></head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0c0a09; padding: 24px; color: #f5f5f4;">
       <div style="max-width: 600px; margin: 0 auto; background: #1c1917; border: 1px solid #292524; border-radius: 12px; overflow: hidden; padding: 28px;">
@@ -62,7 +62,7 @@ export class EmailTemplateService {
         <p style="color: #d6d3d1; font-size: 14px; line-height: 1.5; margin: 0 0 20px 0;">${day.summary}</p>
 
         <div style="background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px;">
-          <strong style="color: #f59e0b;">Current Streak:</strong> ${streaks.currentStreak} Days 🔥
+          <strong style="color: #f59e0b;">Current Streak:</strong> ${streaks.currentStreak} Days
         </div>
 
         <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; margin: 0 0 12px 0;">
@@ -78,11 +78,16 @@ export class EmailTemplateService {
             Open Day ${day.number} on Platform
           </a>
         </div>
+
+        <div style="border-top: 1px solid #292524; margin-top: 28px; padding-top: 16px; font-size: 11px; color: #78716c; text-align: center; line-height: 1.5;">
+          You are receiving this transactional update because you registered on meawakemecode.<br>
+          Manage preferences: <a href="${unsubUrl}" style="color: #6366f1; text-decoration: underline;">meawakemecode-8a35b.web.app/settings</a>
+        </div>
       </div>
     </body>
     </html>`;
 
-    const text = `meawakemecode - Day ${day.number}: ${day.theme}\nStreak: ${streaks.currentStreak} Days\n\nOpen Day ${day.number}: ${appUrl}/day/${day.number}`;
+    const text = `meawakemecode - Day ${day.number}: ${day.theme}\nStreak: ${streaks.currentStreak} Days\n\nOpen Day ${day.number}: ${appUrl}/day/${day.number}\n\nManage preferences: ${unsubUrl}`;
     return { subject, html, text };
   }
 
@@ -96,53 +101,51 @@ export class EmailTemplateService {
     details: { dayNumber?: number; streakCount?: number; weekNumber?: number; totalSolved?: number }
   ): FormattedEmail {
     const appUrl = process.env.APP_BASE_URL || "https://meawakemecode-8a35b.web.app";
-    const subject = `🏆 BADGE UNLOCKED: ${badgeTitle} | meawakemecode`;
+    // Spam-proof subject line: no all-caps, no emojis
+    const subject = `Milestone Verified: ${badgeTitle} | meawakemecode`;
 
     const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head><meta charset="utf-8"><title>${subject}</title></head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #09090b; padding: 24px; color: #f4f4f5;">
       <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; padding: 32px; text-align: center;">
         
-        <div style="width: 72px; height: 72px; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 50%; margin: 0 auto 20px auto; line-height: 72px; font-size: 32px;">
-          🏆
-        </div>
-
         <span style="display: inline-block; padding: 4px 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 9999px; font-size: 11px; font-family: monospace; font-weight: bold; color: #34d399; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
           Official Badge Verified
         </span>
 
-        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0 0 8px 0;">${badgeTitle}</h1>
+        <h1 style="color: #ffffff; font-size: 22px; font-weight: 800; margin: 0 0 8px 0;">${badgeTitle}</h1>
         <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; max-width: 460px; margin: 0 auto 24px auto;">
           You showed up, executed relentlessly, and locked in another verified milestone. Your momentum is undeniable.
         </p>
 
-        <div style="background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 16px; margin-bottom: 28px; display: inline-block; width: 80%; text-align: left;">
+        <div style="background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 16px; margin-bottom: 28px; display: inline-block; width: 85%; text-align: left;">
           ${details.dayNumber ? `<div style="font-size: 13px; color: #e4e4e7; margin-bottom: 6px;"><strong>Milestone:</strong> Day ${details.dayNumber} Cleared (5/5 Problems + Theory + MCQs)</div>` : ""}
-          ${details.streakCount ? `<div style="font-size: 13px; color: #e4e4e7; margin-bottom: 6px;"><strong>Active Streak:</strong> ${details.streakCount} Consecutive Days 🔥</div>` : ""}
+          ${details.streakCount ? `<div style="font-size: 13px; color: #e4e4e7; margin-bottom: 6px;"><strong>Active Streak:</strong> ${details.streakCount} Consecutive Days</div>` : ""}
           ${details.totalSolved ? `<div style="font-size: 13px; color: #e4e4e7;"><strong>Total Solved:</strong> ${details.totalSolved} / 150 Problems</div>` : ""}
         </div>
 
         <div>
           <a href="${appUrl}/me" style="background: #10b981; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 700; display: inline-block;">
-            View Diploma & Badges on Dashboard
+            View Diploma &amp; Badges on Dashboard
           </a>
         </div>
 
-        <div style="border-top: 1px solid #27272a; margin-top: 32px; padding-top: 16px; font-size: 12px; color: #71717a;">
-          meawakemecode • Zero Excuses. Pure Execution.
+        <div style="border-top: 1px solid #27272a; margin-top: 32px; padding-top: 16px; font-size: 11px; color: #71717a; text-align: center; line-height: 1.5;">
+          You are receiving this transactional update because you registered on meawakemecode.<br>
+          Manage preferences: <a href="${appUrl}/settings" style="color: #6366f1; text-decoration: underline;">meawakemecode-8a35b.web.app/settings</a>
         </div>
       </div>
     </body>
     </html>`;
 
-    const text = `🏆 BADGE UNLOCKED: ${badgeTitle}\nView your verified achievements at ${appUrl}/me`;
+    const text = `Milestone Verified: ${badgeTitle}\n\nView your verified achievements at ${appUrl}/me\n\nManage preferences: ${appUrl}/settings`;
     return { subject, html, text };
   }
 
   /**
-   * 3. Urgency Email: Complete It Before You Gain A Trash Badge
+   * 3. Urgency Email: Complete It Before Midnight (Spam-proof subject)
    */
   static buildTrashBadgeWarningEmail(
     userEmail: string,
@@ -151,21 +154,18 @@ export class EmailTemplateService {
     currentStreak: number
   ): FormattedEmail {
     const appUrl = process.env.APP_BASE_URL || "https://meawakemecode-8a35b.web.app";
-    const subject = `⚠️ URGENT: Complete Day ${dayNumber} before you earn the Slacker Trash Badge | meawakemecode`;
+    // Spam-proof subject line: avoid all-caps "URGENT" and warning signs
+    const subject = `Action Required: Day ${dayNumber} Quota Deadline Approaching | meawakemecode`;
 
     const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head><meta charset="utf-8"><title>${subject}</title></head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0c0a09; padding: 24px; color: #f5f5f4;">
       <div style="max-width: 600px; margin: 0 auto; background: #1c1917; border: 2px solid #ef4444; border-radius: 16px; overflow: hidden; padding: 32px; text-align: center;">
         
-        <div style="width: 72px; height: 72px; background: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444; border-radius: 50%; margin: 0 auto 20px auto; line-height: 72px; font-size: 32px;">
-          🗑️
-        </div>
-
         <span style="display: inline-block; padding: 4px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 9999px; font-size: 11px; font-family: monospace; font-weight: bold; color: #f87171; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
-          Accountability Warning · Streak At Risk
+          Accountability Alert · Streak At Risk
         </span>
 
         <h1 style="color: #ffffff; font-size: 22px; font-weight: 800; margin: 0 0 10px 0;">
@@ -178,7 +178,7 @@ export class EmailTemplateService {
 
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px; padding: 16px; margin: 0 auto 28px auto; text-align: left; max-width: 460px;">
           <div style="font-size: 13px; color: #fecaca; margin-bottom: 6px;">
-            <strong>Active Streak:</strong> ${currentStreak} Days (will reset to 0 at midnight)
+            <strong>Active Streak:</strong> ${currentStreak} Days (resets at midnight if incomplete)
           </div>
           <div style="font-size: 13px; color: #fecaca;">
             <strong>Imminent Penalty:</strong> "Bronze Slacker: Comfort Addict" Trash Badge will be awarded to your profile.
@@ -186,24 +186,25 @@ export class EmailTemplateService {
         </div>
 
         <div>
-          <a href="${appUrl}/day/${dayNumber}" style="background: #ef4444; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 800; display: inline-block; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);">
-            Solve Day ${dayNumber} &amp; Burn Trash Badge
+          <a href="${appUrl}/day/${dayNumber}" style="background: #ef4444; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 800; display: inline-block;">
+            Solve Day ${dayNumber} Now
           </a>
         </div>
 
-        <div style="border-top: 1px solid #292524; margin-top: 32px; padding-top: 16px; font-size: 12px; color: #78716c;">
-          You received this because you committed to the 30-Day Technical Prep program on meawakemecode.
+        <div style="border-top: 1px solid #292524; margin-top: 32px; padding-top: 16px; font-size: 11px; color: #78716c; text-align: center; line-height: 1.5;">
+          You are receiving this transactional update because you registered on meawakemecode.<br>
+          Manage preferences: <a href="${appUrl}/settings" style="color: #6366f1; text-decoration: underline;">meawakemecode-8a35b.web.app/settings</a>
         </div>
       </div>
     </body>
     </html>`;
 
-    const text = `⚠️ URGENT: Only ~${hoursLeft} hours left to finish Day ${dayNumber} before you gain the Slacker Trash Badge.\nSolve now: ${appUrl}/day/${dayNumber}`;
+    const text = `Action Required: Only ~${hoursLeft} hours left to finish Day ${dayNumber}.\n\nSolve now: ${appUrl}/day/${dayNumber}\n\nManage preferences: ${appUrl}/settings`;
     return { subject, html, text };
   }
 
   /**
-   * 4. Accountability Email: Look, Things Can Be Tough But Quitting Won't Get You Anywhere
+   * 4. Accountability Email: Reality Check
    */
   static buildToughLoveAccountabilityEmail(
     userEmail: string,
@@ -212,11 +213,12 @@ export class EmailTemplateService {
     roastQuote: string
   ): FormattedEmail {
     const appUrl = process.env.APP_BASE_URL || "https://meawakemecode-8a35b.web.app";
-    const subject = `🔥 Look, things can be tough—but quitting won't get you anywhere | meawakemecode`;
+    // Spam-proof subject line
+    const subject = `Accountability Review: Missed Day ${missedDay} Progress Check | meawakemecode`;
 
     const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head><meta charset="utf-8"><title>${subject}</title></head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #09090b; padding: 24px; color: #f4f4f5;">
       <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid #3f3f46; border-radius: 16px; overflow: hidden; padding: 32px;">
@@ -228,16 +230,16 @@ export class EmailTemplateService {
 
         <h2 style="font-size: 20px; font-weight: 800; color: #ffffff; margin: 0 0 16px 0; line-height: 1.3;">
           Look, things can be tough.<br>
-          <span style="color: #f43f5e;">But quitting can't get you anywhere.</span>
+          <span style="color: #f43f5e;">But quitting will not get you anywhere.</span>
         </h2>
 
-        <div style="font-size: 14px; line-height: 1.7; color: #d4d4d8; space-y: 16px;">
+        <div style="font-size: 14px; line-height: 1.7; color: #d4d4d8;">
           <p style="margin: 0 0 14px 0;">
             We noticed you slipped on Day ${missedDay}. You missed your quota, and right now your profile carries an active <strong>Trash Badge (${missedCount} days behind)</strong>.
           </p>
 
           <p style="margin: 0 0 14px 0;">
-            Let's be completely real: <strong>Dynamic programming is brutal. System design at 100M QPS is intimidating. Life gets chaotic.</strong> We know it's hard.
+            Let's be completely real: <strong>Dynamic programming is brutal. System design at scale is intimidating. Life gets chaotic.</strong> We know it's hard.
           </p>
 
           <p style="margin: 0 0 14px 0;">
@@ -259,48 +261,45 @@ export class EmailTemplateService {
           </a>
         </div>
 
-        <div style="border-top: 1px solid #27272a; padding-top: 16px; font-size: 12px; color: #71717a; text-align: center;">
-          You can burn this Trash Badge and reclaim your momentum. All it takes is one solved problem today.
+        <div style="border-top: 1px solid #27272a; margin-top: 32px; padding-top: 16px; font-size: 11px; color: #71717a; text-align: center; line-height: 1.5;">
+          You are receiving this transactional update because you registered on meawakemecode.<br>
+          Manage preferences: <a href="${appUrl}/settings" style="color: #6366f1; text-decoration: underline;">meawakemecode-8a35b.web.app/settings</a>
         </div>
       </div>
     </body>
     </html>`;
 
-    const text = `Look, things can be tough—but quitting can't get you anywhere.\n\nClaw back Day ${missedDay}: ${appUrl}/day/${missedDay}`;
+    const text = `Accountability Review: Missed Day ${missedDay}\n\nThings can be tough, but quitting won't get you anywhere.\n\nClaw back Day ${missedDay}: ${appUrl}/day/${missedDay}\n\nManage preferences: ${appUrl}/settings`;
     return { subject, html, text };
   }
 
   /**
-   * 5. Welcome Email: 30-Day Engineering Commitment & Reverse Accountability Onboarding
+   * 5. Welcome Email: 30-Day Engineering Commitment (Spam-proof subject)
    */
   static buildWelcomeEmail(userEmail: string): FormattedEmail {
     const appUrl = process.env.APP_BASE_URL || "https://meawakemecode-8a35b.web.app";
-    const subject = `⚡ Welcome to meawakemecode — 30-Day Engineering Commitment`;
+    // Spam-proof subject line
+    const subject = `Welcome to meawakemecode: 30-Day Engineering Commitment`;
 
     const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head><meta charset="utf-8"><title>${subject}</title></head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #09090b; padding: 24px; color: #f4f4f5;">
       <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; padding: 32px;">
         
         <!-- Header -->
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
-          <div>
-            <h1 style="color: #6366f1; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">meawakemecode</h1>
-            <p style="color: #a1a1aa; font-size: 13px; margin: 4px 0 0 0;">30-Day Technical Interview Prep &amp; Engineering Mastery</p>
-          </div>
+        <div style="border-bottom: 1px solid #27272a; padding-bottom: 20px; margin-bottom: 24px;">
+          <h1 style="color: #6366f1; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">meawakemecode</h1>
+          <p style="color: #a1a1aa; font-size: 13px; margin: 4px 0 0 0;">30-Day Technical Interview Prep &amp; Engineering Mastery</p>
         </div>
 
         <!-- Hero Section -->
         <div style="text-align: center; padding: 12px 0 24px 0;">
-          <div style="width: 72px; height: 72px; background: rgba(99, 102, 241, 0.15); border: 2px solid #6366f1; border-radius: 50%; margin: 0 auto 16px auto; line-height: 72px; font-size: 32px;">
-            ⚡
-          </div>
           <span style="display: inline-block; padding: 4px 14px; background: rgba(99, 102, 241, 0.2); border: 1px solid #6366f1; border-radius: 9999px; font-size: 11px; font-family: monospace; font-weight: bold; color: #818cf8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">
             Commitment Initialized
           </span>
-          <h2 style="font-size: 24px; font-weight: 800; color: #ffffff; margin: 0 0 10px 0; letter-spacing: -0.5px;">
+          <h2 style="font-size: 22px; font-weight: 800; color: #ffffff; margin: 0 0 10px 0; letter-spacing: -0.5px;">
             Your 30-Day Technical Sprint Starts Today
           </h2>
           <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6; max-width: 480px; margin: 0 auto;">
@@ -315,25 +314,25 @@ export class EmailTemplateService {
           </h3>
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <tr>
-              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top; width: 28px;">💻</td>
+              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top; width: 28px;">•</td>
               <td style="padding: 8px 0; color: #d4d4d8;">
                 <strong style="color: #ffffff;">5 Curated Problems Daily:</strong> 150 high-frequency LeetCode and Codeforces challenges ordered by cognitive progression.
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">🧠</td>
+              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">•</td>
               <td style="padding: 8px 0; color: #d4d4d8;">
                 <strong style="color: #ffffff;">Deep CS Fundamentals:</strong> Concurrency, OS primitives, kernel memory, networking stack, and ACID databases.
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">📐</td>
+              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">•</td>
               <td style="padding: 8px 0; color: #d4d4d8;">
                 <strong style="color: #ffffff;">Distributed System Design:</strong> Microservice latency budgets, CAP/PACELC trade-offs, and partition tolerance architectures.
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">🎯</td>
+              <td style="padding: 8px 0; color: #e4e4e7; vertical-align: top;">•</td>
               <td style="padding: 8px 0; color: #d4d4d8;">
                 <strong style="color: #ffffff;">60-Question Daily MCQ Gauntlet:</strong> Instant feedback drills testing implementation edge cases and asymptotic complexities.
               </td>
@@ -344,7 +343,6 @@ export class EmailTemplateService {
         <!-- Reverse Accountability Warning Box -->
         <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 20px; margin-bottom: 28px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-            <span style="font-size: 18px;">🗑️</span>
             <strong style="color: #f87171; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
               The Reverse Accountability Protocol
             </strong>
@@ -354,32 +352,28 @@ export class EmailTemplateService {
           </p>
           <ul style="color: #fca5a5; font-size: 13px; line-height: 1.6; margin: 0; padding-left: 18px;">
             <li>If you complete your daily quota, you earn verified mastery badges.</li>
-            <li><strong>If you skip or procrastinate</strong>, your profile is branded with <em>Slacker Trash Badges</em> (Bronze, Silver, Gold, Diamond) and urgency accountability emails are triggered.</li>
+            <li><strong>If you skip or procrastinate</strong>, your profile is branded with <em>Slacker Trash Badges</em> (Bronze, Silver, Gold, Diamond).</li>
             <li>The only way to erase a Trash Badge is to sit down and claw back your missed days.</li>
           </ul>
         </div>
 
         <!-- CTA Section -->
         <div style="text-align: center; margin: 28px 0 20px 0;">
-          <a href="${appUrl}/day/1" style="background: #6366f1; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 700; display: inline-block; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
+          <a href="${appUrl}/day/1" style="background: #6366f1; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 700; display: inline-block;">
             Start Day 1: Array Manipulation &amp; Invariants →
           </a>
-          <p style="color: #71717a; font-size: 12px; margin: 10px 0 0 0;">
-            Your account is linked to <span style="font-family: monospace; color: #a1a1aa;">${userEmail}</span>. Solves sync seamlessly across all your devices.
-          </p>
         </div>
 
         <!-- Footer -->
-        <div style="border-top: 1px solid #27272a; margin-top: 32px; padding-top: 20px; font-size: 12px; color: #71717a; text-align: center;">
-          <p style="margin: 0 0 6px 0; font-weight: 600; color: #a1a1aa;">Zero Excuses. Pure Execution.</p>
-          meawakemecode • <a href="${appUrl}" style="color: #6366f1; text-decoration: none;">meawakemecode-8a35b.web.app</a>
+        <div style="border-top: 1px solid #27272a; margin-top: 32px; padding-top: 16px; font-size: 11px; color: #71717a; text-align: center; line-height: 1.5;">
+          You are receiving this transactional update because you registered on meawakemecode.<br>
+          Manage preferences: <a href="${appUrl}/settings" style="color: #6366f1; text-decoration: underline;">meawakemecode-8a35b.web.app/settings</a>
         </div>
       </div>
     </body>
     </html>`;
 
-    const text = `⚡ Welcome to meawakemecode — 30-Day Engineering Commitment\n\nYour 30-day technical sprint starts today.\n\nCurriculum Structure:\n- 150 Core Problems (5/day)\n- Deep CS Fundamentals & Concurrency\n- Distributed System Design & Bottlenecks\n- 60-Question Daily MCQ Retention Gauntlet\n\nReverse Accountability Protocol:\nIf you skip or miss days, you earn Slacker Trash Badges on your profile. The only way to burn them is to complete your work.\n\nStart Day 1 Now: ${appUrl}/day/1\nLinked Account: ${userEmail}`;
-
+    const text = `Welcome to meawakemecode — 30-Day Engineering Commitment\n\nYour 30-day technical sprint starts today.\n\nStart Day 1: ${appUrl}/day/1\n\nManage preferences: ${appUrl}/settings`;
     return { subject, html, text };
   }
 }
