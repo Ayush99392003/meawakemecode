@@ -60,6 +60,7 @@ const topicCategories = [
 export function LeftSidebar() {
   const [quoteIndex, setQuoteIndex] = React.useState(0);
   const { problems } = useProgressStore();
+  const focusMode = useSettingsStore((s) => s.focusMode);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -103,7 +104,10 @@ export function LeftSidebar() {
   }, [problems]);
 
   return (
-    <aside className="hidden xl:flex flex-col gap-4 w-64 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto pb-6 pr-1 scrollbar-none hover:scrollbar-thin">
+    <aside className={cn(
+      "hidden xl:flex flex-col gap-4 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto overflow-x-hidden pb-6 pr-1 scrollbar-none hover:scrollbar-thin transition-all duration-300 ease-in-out",
+      focusMode ? "w-0 opacity-0 pointer-events-none" : "w-64 opacity-100"
+    )}>
       {/* Rotating Motivational Quote Card */}
       <div className="relative p-4 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] overflow-hidden group shadow-sm">
         <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-indigo-500 via-purple-500 to-transparent pointer-events-none" />
@@ -240,6 +244,7 @@ const milestones = [
 export function RightSidebar() {
   const { problems, dayCompletions, startDate } = useProgressStore();
   const { userEmail } = useSettingsStore();
+  const focusMode = useSettingsStore((s) => s.focusMode);
   const streak = calculateStreak(dayCompletions, startDate);
   
   const totalSolved = Object.values(problems).filter((p) => p.status === 'solved').length;
@@ -257,7 +262,10 @@ export function RightSidebar() {
   }, [activeDayNumber]);
 
   return (
-    <aside className="hidden xl:flex flex-col gap-4 w-60 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto pb-6 pl-1 scrollbar-none hover:scrollbar-thin">
+    <aside className={cn(
+      "hidden xl:flex flex-col gap-4 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto overflow-x-hidden pb-6 pl-1 scrollbar-none hover:scrollbar-thin transition-all duration-300 ease-in-out",
+      focusMode ? "w-0 opacity-0 pointer-events-none" : "w-60 opacity-100"
+    )}>
       {/* Streak & Stats Hero Card */}
       <div className="relative p-4 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] overflow-hidden shadow-sm">
         <div className="absolute inset-0 opacity-[0.04] bg-gradient-to-bl from-orange-400 via-amber-300 to-transparent pointer-events-none" />

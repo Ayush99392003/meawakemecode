@@ -4,17 +4,13 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BookOpen,
-  Cpu,
-  Layers,
   CheckCircle2,
   Lock,
-  StickyNote,
-  ListOrdered,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   getDayByNumber,
@@ -35,6 +31,8 @@ import { DayMcqGauntlet } from '@/components/day/day-mcq-gauntlet';
 import { DayProgressStepper } from '@/components/day/day-progress-stepper';
 import { NotesBox } from '@/components/day/notes-box';
 import { DayCompleteModal } from '@/components/day/day-complete-modal';
+import { FocusTheoryReader } from '@/components/day/focus-theory-reader';
+import { FocusMcqCard } from '@/components/day/focus-mcq-card';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { Button } from '@/components/ui/button';
 import { Banner } from '@/components/ui/banner';
@@ -62,7 +60,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
     setNote,
   } = useProgressStore();
 
-  const { strictMode } = useSettingsStore();
+  const { strictMode, focusMode, setFocusMode } = useSettingsStore();
 
   const [activeTab, setActiveTab] = React.useState<
     'all' | 'dsa' | 'cs' | 'system_design' | 'problems' | 'mcq' | 'notes'
@@ -70,6 +68,34 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
   const [showCelebration, setShowCelebration] = React.useState(false);
   const [showTrashModal, setShowTrashModal] = React.useState(false);
   const [dayNote, setDayNote] = React.useState('');
+
+  // Auto-activate focus mode for theory/mcq tabs, deactivate for others
+  const handleSetActiveTab = React.useCallback(
+    (tab: typeof activeTab) => {
+      setActiveTab(tab);
+      if (tab === 'dsa' || tab === 'cs' || tab === 'system_design' || tab === 'mcq') {
+        setFocusMode(true);
+      } else {
+        setFocusMode(false);
+      }
+    },
+    [setFocusMode]
+  );
+
+  // Keyboard: F to toggle, Escape to exit
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'f' || e.key === 'F') {
+        setFocusMode(!focusMode);
+      } else if (e.key === 'Escape' && focusMode) {
+        setFocusMode(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [focusMode, setFocusMode]);
 
   const trashInfo = React.useMemo(
     () => calculateTrashBadge(dayCompletions, startDate),
@@ -143,7 +169,10 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
   };
 
   return (
-    <div className="max-w-[960px] mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
+    <div className={cn(
+      "mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6 transition-all duration-300",
+      focusMode ? "max-w-[860px]" : "max-w-[960px]"
+    )}>
       {/* Sticky Top Bar for Navigation */}
       <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-[rgb(var(--background)/0.92)] backdrop-blur-md border-b border-[rgb(var(--border))] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -172,6 +201,21 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           />
 
           <ProgressRing value={solvedCount} max={5} size={36} strokeWidth={4} />
+
+          {/* Focus Mode Toggle */}
+          <button
+            onClick={() => setFocusMode(!focusMode)}
+            title={`${focusMode ? 'Exit' : 'Enter'} Focus Mode (F)`}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all',
+              focusMode
+                ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30'
+                : 'border-[rgb(var(--border))] text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-raised))] hover:text-[rgb(var(--text-primary))]'
+            )}
+          >
+            {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{focusMode ? 'Exit Focus' : 'Focus'}</span>
+          </button>
 
           {/* Prev / Next buttons */}
           <div className="flex items-center gap-1">
@@ -238,7 +282,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
       {/* Segmented Filter Pills on Mobile */}
       <div className="flex sm:hidden overflow-x-auto p-1 rounded-[var(--radius-md)] bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] gap-1">
         <button
-          onClick={() => setActiveTab('all')}
+          onClick={() => handleSetActiveTab('all')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'all'
@@ -249,7 +293,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           All
         </button>
         <button
-          onClick={() => setActiveTab('dsa')}
+          onClick={() => handleSetActiveTab('dsa')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'dsa'
@@ -260,7 +304,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           DSA Theory
         </button>
         <button
-          onClick={() => setActiveTab('cs')}
+          onClick={() => handleSetActiveTab('cs')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'cs'
@@ -271,7 +315,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           CS Fund
         </button>
         <button
-          onClick={() => setActiveTab('system_design')}
+          onClick={() => handleSetActiveTab('system_design')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'system_design'
@@ -282,7 +326,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           Sys Design
         </button>
         <button
-          onClick={() => setActiveTab('problems')}
+          onClick={() => handleSetActiveTab('problems')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'problems'
@@ -293,7 +337,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           Problems ({solvedCount}/5)
         </button>
         <button
-          onClick={() => setActiveTab('mcq')}
+          onClick={() => handleSetActiveTab('mcq')}
           className={cn(
             'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
             activeTab === 'mcq'
@@ -307,6 +351,31 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
 
       {/* Main Flow: Sequential Learning Blocks */}
       <div className="space-y-0">
+        {/* ── FOCUS MODE: Theory Reader ── */}
+        {focusMode && (activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design') && (
+          <FocusTheoryReader
+            dayNumber={dayNumber}
+            theme={day.theme}
+            summary={day.summary}
+            csModule={csModule}
+            sdModule={sdModule}
+            initialModule={activeTab === 'dsa' ? 0 : activeTab === 'cs' ? 1 : 2}
+          />
+        )}
+
+        {/* ── FOCUS MODE: MCQ Card ── */}
+        {focusMode && activeTab === 'mcq' && (
+          <FocusMcqCard
+            dayNumber={dayNumber}
+            dsaMcqs={mcqSet.dsa}
+            csMcqs={mcqSet.cs}
+            systemDesignMcqs={mcqSet.systemDesign}
+          />
+        )}
+
+        {/* ── NORMAL MODE: Full sequential flow ── */}
+        {(!focusMode || (activeTab !== 'dsa' && activeTab !== 'cs' && activeTab !== 'system_design' && activeTab !== 'mcq')) && (
+          <>
         {/* Step 1: DSA Theory & Invariants */}
         <RevealOnScroll delay={0}>
           <div
@@ -472,6 +541,8 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
             placeholder={`Notes for Day ${dayNumber} (${day.theme}). Save edge cases, gotchas, or interview explanations...`}
           />
         </div>
+          </>
+        )}
       </div>
 
       {/* Completion Status & Mark Complete Floating Bar */}

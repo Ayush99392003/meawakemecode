@@ -16,6 +16,8 @@ interface SettingsState {
   onboardingDismissed: boolean;
   /** Background animation intensity: 0 = off, 0.5 = subtle, 1 = full */
   bgIntensity: number;
+  /** Distraction-free focus mode — session only (resets on page load) */
+  focusMode: boolean;
   
   setTheme: (theme: ThemeMode) => void;
   setPreferredLanguage: (lang: PreferredLanguage) => void;
@@ -27,6 +29,7 @@ interface SettingsState {
   setUserEmail: (email: string | null) => void;
   setOnboardingDismissed: (dismissed: boolean) => void;
   setBgIntensity: (intensity: number) => void;
+  setFocusMode: (val: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -42,6 +45,7 @@ export const useSettingsStore = create<SettingsState>()(
       userEmail: null,
       onboardingDismissed: false,
       bgIntensity: 0.7,
+      focusMode: false,
 
       setTheme: (theme) => {
         set({ theme });
@@ -56,6 +60,7 @@ export const useSettingsStore = create<SettingsState>()(
       setUserEmail: (userEmail) => set({ userEmail }),
       setOnboardingDismissed: (onboardingDismissed) => set({ onboardingDismissed }),
       setBgIntensity: (bgIntensity) => set({ bgIntensity: Math.min(1, Math.max(0, bgIntensity)) }),
+      setFocusMode: (focusMode) => set({ focusMode }),
     }),
     {
       name: 'dsa-sheet-settings-v1',
