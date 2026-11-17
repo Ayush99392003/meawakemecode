@@ -17,6 +17,7 @@ import { CsFundamentalsBlock } from './cs-fundamentals-block';
 import { SystemDesignBlock } from './system-design-block';
 import { useProgressStore } from '@/lib/stores/progress-store';
 import { CsDailyModule, SystemDesignDailyModule } from '@/lib/data';
+import { trackTheoryModuleRead } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 interface FocusTheoryReaderProps {
@@ -94,9 +95,18 @@ export function FocusTheoryReader({
   };
 
   const handleMarkAndNext = () => {
-    if (moduleIndex === 0 && !isDsaRead) markTheoryRead(dayNumber);
-    if (moduleIndex === 1 && !isCsRead) markCsTheoryRead(dayNumber);
-    if (moduleIndex === 2 && !isSdRead) markSystemDesignRead(dayNumber);
+    if (moduleIndex === 0 && !isDsaRead) {
+      markTheoryRead(dayNumber);
+      trackTheoryModuleRead(dayNumber, 'dsa');
+    }
+    if (moduleIndex === 1 && !isCsRead) {
+      markCsTheoryRead(dayNumber);
+      trackTheoryModuleRead(dayNumber, 'cs');
+    }
+    if (moduleIndex === 2 && !isSdRead) {
+      markSystemDesignRead(dayNumber);
+      trackTheoryModuleRead(dayNumber, 'system_design');
+    }
 
     if (moduleIndex < 2) {
       goTo((moduleIndex + 1) as 0 | 1 | 2);

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TrashBadgeInfo } from '@/lib/accountability';
+import { trackTrashRoastOpened } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 interface TrashBadgeModalProps {
@@ -23,6 +24,12 @@ interface TrashBadgeModalProps {
 }
 
 export function TrashBadgeModal({ trashInfo, isOpen, onClose }: TrashBadgeModalProps) {
+  React.useEffect(() => {
+    if (isOpen) {
+      trackTrashRoastOpened(trashInfo.tier);
+    }
+  }, [isOpen, trashInfo.tier]);
+
   if (!isOpen) return null;
 
   const isDumpster = trashInfo.tier === 'dumpster';

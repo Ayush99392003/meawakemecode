@@ -52,6 +52,11 @@ import { calculateTrashBadge } from '@/lib/accountability';
 import { TrashBadgeBanner } from '@/components/accountability/trash-badge-banner';
 import { TrashBadgeModal } from '@/components/accountability/trash-badge-modal';
 import { TrashBadgePill } from '@/components/accountability/trash-badge-pill';
+import {
+  trackFocusModeToggle,
+  trackBehavioralEvent,
+  trackTrashQuotaSalvaged,
+} from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 export default function TodayPage() {
@@ -176,6 +181,10 @@ export default function TodayPage() {
   const handleMarkDayComplete = () => {
     completeDay(currentDayNum);
     setShowCelebration(true);
+    trackBehavioralEvent('day_completed', { dayNumber: currentDayNum, solvedCount: solvedCountToday });
+    if (trashInfo.hasTrashBadge) {
+      trackTrashQuotaSalvaged(currentDayNum, solvedCountToday);
+    }
   };
 
   const handleJumpToSection = (sectionId: string) => {
@@ -223,6 +232,7 @@ export default function TodayPage() {
               onClick={() => {
                 const next = !focusMode;
                 setFocusMode(next);
+                trackFocusModeToggle(next, 'today_header', activeTab);
                 if (next && activeTab === 'all') {
                   setActiveTab('dsa');
                 }
@@ -305,6 +315,7 @@ export default function TodayPage() {
                 onClick={() => {
                   const next = !focusMode;
                   setFocusMode(next);
+                  trackFocusModeToggle(next, 'today_card', activeTab);
                   if (next && activeTab === 'all') {
                     setActiveTab('dsa');
                   }

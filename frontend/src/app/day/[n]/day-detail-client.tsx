@@ -42,6 +42,11 @@ import { calculateTrashBadge } from '@/lib/accountability';
 import { TrashBadgeBanner } from '@/components/accountability/trash-badge-banner';
 import { TrashBadgeModal } from '@/components/accountability/trash-badge-modal';
 import { TrashBadgePill } from '@/components/accountability/trash-badge-pill';
+import {
+  trackFocusModeToggle,
+  trackBehavioralEvent,
+  trackTrashQuotaSalvaged,
+} from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
@@ -156,6 +161,10 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
   const handleMarkComplete = () => {
     completeDay(dayNumber, dayNumber < currentDayNum);
     setShowCelebration(true);
+    trackBehavioralEvent('day_completed', { dayNumber, solvedCount, isStrictLocked: isLocked });
+    if (trashInfo.hasTrashBadge) {
+      trackTrashQuotaSalvaged(dayNumber, solvedCount);
+    }
   };
 
   const handleJumpToSection = (sectionId: string) => {
@@ -207,6 +216,7 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
             onClick={() => {
               const next = !focusMode;
               setFocusMode(next);
+              trackFocusModeToggle(next, 'day_detail', activeTab);
               if (next && activeTab === 'all') {
                 setActiveTab('dsa');
               }

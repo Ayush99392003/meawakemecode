@@ -15,6 +15,7 @@ import {
 import { McqQuestion } from '@/lib/data';
 import { useProgressStore } from '@/lib/stores/progress-store';
 import { Button } from '@/components/ui/button';
+import { trackMcqCategoryFinished } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 interface FocusMcqCardProps {
@@ -130,6 +131,13 @@ export function FocusMcqCard({ dayNumber, dsaMcqs, csMcqs, systemDesignMcqs }: F
   const stats = { dsa: getCatStats(dsaMcqs), cs: getCatStats(csMcqs), sd: getCatStats(systemDesignMcqs) };
   const curStats = stats[category];
   const progress = questions.length > 0 ? ((currentIdx + 1) / questions.length) * 100 : 0;
+
+  // Track category finish telemetry
+  React.useEffect(() => {
+    if (curStats.answered === curStats.total && curStats.total > 0) {
+      trackMcqCategoryFinished(dayNumber, category, curStats.correct, curStats.total);
+    }
+  }, [curStats.answered, curStats.total, curStats.correct, dayNumber, category]);
 
   if (!question) {
     return (

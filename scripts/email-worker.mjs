@@ -11,10 +11,13 @@ import {
   getDocs,
   getDoc,
   setDoc,
+  addDoc,
   onSnapshot,
   doc,
   updateDoc,
   serverTimestamp,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import {
   sendBadgeNotification,
@@ -556,6 +559,196 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
       }
     });
+    return;
+  }
+
+  // -------------------------------------------------------------
+  // Analytics & Behavioral Dataset Ingestion (Zero PII)
+  // -------------------------------------------------------------
+  if (pathname === "/api/analytics/ingest" && req.method === "POST") {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", async () => {
+      try {
+        const eventData = JSON.parse(body || "{}");
+        if (!eventData.eventType || !eventData.anonId) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: false, error: "Invalid telemetry payload" }));
+          return;
+        }
+
+        // Store to Firestore 'behavioral_dataset'
+        try {
+          const colRef = collection(db, "behavioral_dataset");
+          await addDoc(colRef, {
+            ...eventData,
+            serverReceivedAt: serverTimestamp(),
+            serverIso: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn("[Worker Analytics] Firestore write warning:", dbErr.message);
+        }
+
+        // Local Append Fail-safe
+        try {
+          const telemetryDir = path.join(rootDir, "data", "telemetry");
+          if (!fs.existsSync(telemetryDir)) fs.mkdirSync(telemetryDir, { recursive: true });
+          fs.appendFileSync(
+            path.join(telemetryDir, "behavioral_events.jsonl"),
+            JSON.stringify({ ...eventData, serverIso: new Date().toISOString() }) + "\n",
+            "utf-8"
+          );
+        } catch {}
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  // -------------------------------------------------------------
+  // Private Admin Dataset Export (Option B)
+  // -------------------------------------------------------------
+  if (pathname === "/api/analytics/dataset" && req.method === "GET") {
+    const key = reqUrl.searchParams.get("key");
+    const validKey = process.env.ADMIN_KEY || process.env.CRON_SECRET || "meawakemecode_analytics_dataset_key_2026";
+    if (key !== validKey) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized: Invalid admin key" }));
+      return;
+    }
+
+    const rowLimit = Math.min(Math.max(1, Number(reqUrl.searchParams.get("limit") || 1000)), 5000);
+    const filterEvent = reqUrl.searchParams.get("event");
+    const format = reqUrl.searchParams.get("format") || "json";
+
+    try {
+      const colRef = collection(db, "behavioral_dataset");
+      let q = query(colRef, orderBy("clientTimestamp", "desc"), limit(rowLimit));
+      if (filterEvent) {
+        q = query(colRef, where("eventType", "==", filterEvent), limit(rowLimit));
+      }
+
+      const snap = await getDocs(q);
+      const records = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      if (format === "csv") {
+        if (records.length === 0) {
+          res.writeHead(200, { "Content-Type": "text/csv" });
+          res.end("id,anonId,eventType,clientTimestamp\n");
+          return;
+        }
+        const headers = ["id", "anonId", "eventType", "clientTimestamp", "localHour", "device", "tier", "dayNumber", "problemId"];
+        const csvRows = [headers.join(",")];
+        for (const r of records) {
+          const row = headers.map((h) => JSON.stringify(r[h] ?? "")).join(",");
+          csvRows.push(row);
+        }
+        res.writeHead(200, {
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename="behavioral_dataset_${Date.now()}.csv"`,
+        });
+        res.end(csvRows.join("\n"));
+        return;
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ totalCount: records.length, records }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+
+  // -------------------------------------------------------------
+  // Private Admin Analytics Summary (Option B Pattern Insights)
+  // -------------------------------------------------------------
+  if (pathname === "/api/analytics/summary" && req.method === "GET") {
+    const key = reqUrl.searchParams.get("key");
+    const validKey = process.env.ADMIN_KEY || process.env.CRON_SECRET || "meawakemecode_analytics_dataset_key_2026";
+    if (key !== validKey) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized: Invalid admin key" }));
+      return;
+    }
+
+    try {
+      const colRef = collection(db, "behavioral_dataset");
+      const q = query(colRef, orderBy("clientTimestamp", "desc"), limit(2000));
+      const snap = await getDocs(q);
+      const records = snap.docs.map((d) => d.data());
+
+      const cohorts = new Set();
+      let warningsIssued = 0;
+      let warningsSalvaged = 0;
+      let roastsRead = 0;
+      const tierCounts = { bronze: 0, silver: 0, gold: 0, dumpster: 0 };
+      const hourlySolves = new Array(24).fill(0);
+      let focusToggles = 0;
+      let mcqTotalCorrect = 0;
+      let mcqTotalCount = 0;
+
+      for (const r of records) {
+        if (r.anonId) cohorts.add(r.anonId);
+
+        if (r.eventType === "trash_warning_viewed") warningsIssued++;
+        if (r.eventType === "trash_quota_salvaged") warningsSalvaged++;
+        if (r.eventType === "trash_roast_opened") roastsRead++;
+        if (r.eventType === "trash_badge_assigned" && r.tier && tierCounts[r.tier] !== undefined) {
+          tierCounts[r.tier]++;
+        }
+        if (r.eventType === "problem_solved" && typeof r.localHour === "number") {
+          hourlySolves[r.localHour]++;
+        }
+        if (r.eventType === "focus_mode_toggled") focusToggles++;
+        if (r.eventType === "mcq_category_finished") {
+          mcqTotalCorrect += Number(r.correct) || 0;
+          mcqTotalCount += Number(r.total) || 0;
+        }
+      }
+
+      const salvageRate = warningsIssued > 0 ? Math.round((warningsSalvaged / warningsIssued) * 100) : 0;
+      const mcqAccuracy = mcqTotalCount > 0 ? Math.round((mcqTotalCorrect / mcqTotalCount) * 100) : 0;
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          status: "success",
+          generatedAt: new Date().toISOString(),
+          sampleSize: records.length,
+          uniqueAnonymousLearners: cohorts.size,
+          patterns: {
+            trashBadgeEffect: {
+              warningsIssued,
+              warningsSalvaged,
+              salvageRatePercent: salvageRate,
+              roastsRead,
+              tierDistribution: tierCounts,
+              interpretation:
+                salvageRate >= 60
+                  ? "High urgency response: Majority of warned learners finish quota before midnight."
+                  : "Moderate response: Consider advancing urgency notification earlier in the evening.",
+            },
+            focusModeAdoption: {
+              totalToggles: focusToggles,
+            },
+            mcqPerformance: {
+              totalAnswered: mcqTotalCount,
+              overallAccuracyPercent: mcqAccuracy,
+            },
+            hourlyStudyHeatmap: hourlySolves,
+          },
+        })
+      );
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, error: err?.message || String(err) }));
+    }
     return;
   }
 

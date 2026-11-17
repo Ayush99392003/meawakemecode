@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Trash2, AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
 import { TrashBadgeInfo } from '@/lib/accountability';
 import { Button } from '@/components/ui/button';
+import { trackTrashBadgeAssigned, trackTrashRoastOpened } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 interface TrashBadgeBannerProps {
@@ -12,6 +13,12 @@ interface TrashBadgeBannerProps {
 }
 
 export function TrashBadgeBanner({ trashInfo, onInspect }: TrashBadgeBannerProps) {
+  React.useEffect(() => {
+    if (trashInfo.hasTrashBadge) {
+      trackTrashBadgeAssigned(trashInfo.tier, trashInfo.missedCount, trashInfo.daysBehind);
+    }
+  }, [trashInfo.hasTrashBadge, trashInfo.tier, trashInfo.missedCount, trashInfo.daysBehind]);
+
   if (!trashInfo.hasTrashBadge) return null;
 
   return (
@@ -38,7 +45,10 @@ export function TrashBadgeBanner({ trashInfo, onInspect }: TrashBadgeBannerProps
       <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
         <Button
           size="sm"
-          onClick={onInspect}
+          onClick={() => {
+            trackTrashRoastOpened(trashInfo.tier);
+            onInspect();
+          }}
           className="bg-rose-600 hover:bg-rose-700 text-white font-bold cursor-pointer text-xs"
         >
           <span>Burn Trash Badge</span>

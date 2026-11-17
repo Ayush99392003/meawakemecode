@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Chip } from '@/components/ui/chip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { trackProblemSolved } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
 export interface ProblemRowProps {
@@ -41,6 +42,7 @@ export function ProblemRow({ problem, dayNumber, index }: ProblemRowProps) {
   const handleCheckbox = (checked: boolean) => {
     if (checked) {
       solveProblem(problem.id, dayNumber);
+      trackProblemSolved(dayNumber, problem.id, problem.difficulty);
     } else {
       unsolveProblem(problem.id);
     }
