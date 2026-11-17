@@ -35,3 +35,6 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Telemetry raw snapshots
+data/telemetry/
+
