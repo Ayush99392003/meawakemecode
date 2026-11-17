@@ -204,17 +204,32 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
 
           {/* Focus Mode Toggle */}
           <button
-            onClick={() => setFocusMode(!focusMode)}
-            title={`${focusMode ? 'Exit' : 'Enter'} Focus Mode (F)`}
+            onClick={() => {
+              const next = !focusMode;
+              setFocusMode(next);
+              if (next && activeTab === 'all') {
+                setActiveTab('dsa');
+              }
+            }}
+            title={`${focusMode ? 'Exit' : 'Enter'} Focus Mode (Shortcut: F)`}
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer select-none',
               focusMode
-                ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30'
-                : 'border-[rgb(var(--border))] text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-raised))] hover:text-[rgb(var(--text-primary))]'
+                ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-indigo-500/30 ring-2 ring-indigo-400/60'
+                : 'bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] text-[rgb(var(--text-primary))] hover:border-[rgb(var(--accent))] hover:bg-[rgb(var(--surface))]'
             )}
           >
-            {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{focusMode ? 'Exit Focus' : 'Focus'}</span>
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full shrink-0 transition-colors',
+                focusMode ? 'bg-emerald-300 animate-pulse' : 'bg-zinc-400'
+              )}
+            />
+            {focusMode ? <EyeOff className="w-3.5 h-3.5 shrink-0" /> : <Eye className="w-3.5 h-3.5 shrink-0" />}
+            <span>{focusMode ? 'Focus ON' : 'Focus Mode'}</span>
+            <kbd className="hidden sm:inline-block px-1 rounded text-[9px] font-mono opacity-80 bg-black/20 border border-white/10">
+              F
+            </kbd>
           </button>
 
           {/* Prev / Next buttons */}
@@ -260,106 +275,168 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
         </Banner>
       )}
 
-      {/* Reverse Accountability Trash Badge Banner */}
-      <TrashBadgeBanner
-        trashInfo={trashInfo}
-        onInspect={() => setShowTrashModal(true)}
-      />
+      {/* Focus Mode Navigation OR Standard Steppers */}
+      {focusMode ? (
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-[rgb(var(--surface))] to-purple-950/40 border border-indigo-500/30 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold font-mono border border-indigo-500/40">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              FOCUS ACTIVE
+            </span>
+            <span className="text-xs text-[rgb(var(--text-muted))] hidden md:inline font-mono">
+              Press <kbd className="px-1 py-0.5 rounded bg-black/30 border border-white/10 text-[10px]">Esc</kbd> or <kbd className="px-1 py-0.5 rounded bg-black/30 border border-white/10 text-[10px]">F</kbd> to exit
+            </span>
+          </div>
 
-      {/* Step-by-Step Daily Progress Shower (Stepper Checklist) */}
-      <DayProgressStepper
-        dayNumber={dayNumber}
-        dsaTheoryRead={isDsaRead}
-        csTheoryRead={isCsRead}
-        systemDesignRead={isSdRead}
-        solvedCount={solvedCount}
-        totalProblems={dayProblems.length}
-        mcqAnsweredCount={answeredMcqsCount}
-        totalMcqs={mcqSet.total}
-        onJumpToSection={handleJumpToSection}
-      />
+          {/* Section Switcher in Focus Mode */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setActiveTab('dsa')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'all' || activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design'
+                  ? 'bg-indigo-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              Theory (3 Mods)
+            </button>
+            <button
+              onClick={() => setActiveTab('problems')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'problems'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              Problems ({solvedCount}/5)
+            </button>
+            <button
+              onClick={() => setActiveTab('mcq')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'mcq'
+                  ? 'bg-emerald-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              MCQs ({answeredMcqsCount}/{mcqSet.total})
+            </button>
+          </div>
 
-      {/* Segmented Filter Pills on Mobile */}
-      <div className="flex sm:hidden overflow-x-auto p-1 rounded-[var(--radius-md)] bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] gap-1">
-        <button
-          onClick={() => handleSetActiveTab('all')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'all'
-              ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          All
-        </button>
-        <button
-          onClick={() => handleSetActiveTab('dsa')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'dsa'
-              ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          DSA Theory
-        </button>
-        <button
-          onClick={() => handleSetActiveTab('cs')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'cs'
-              ? 'bg-[rgb(var(--surface))] text-blue-400 shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          CS Fund
-        </button>
-        <button
-          onClick={() => handleSetActiveTab('system_design')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'system_design'
-              ? 'bg-[rgb(var(--surface))] text-purple-400 shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          Sys Design
-        </button>
-        <button
-          onClick={() => handleSetActiveTab('problems')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'problems'
-              ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          Problems ({solvedCount}/5)
-        </button>
-        <button
-          onClick={() => handleSetActiveTab('mcq')}
-          className={cn(
-            'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
-            activeTab === 'mcq'
-              ? 'bg-[rgb(var(--surface))] text-emerald-400 shadow-sm'
-              : 'text-[rgb(var(--text-muted))]'
-          )}
-        >
-          MCQs ({answeredMcqsCount}/{mcqSet.total})
-        </button>
-      </div>
+          <button
+            onClick={() => setFocusMode(false)}
+            className="text-xs text-[rgb(var(--text-secondary))] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer shrink-0 font-medium"
+          >
+            Exit Focus ✕
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Reverse Accountability Trash Badge Banner */}
+          <TrashBadgeBanner
+            trashInfo={trashInfo}
+            onInspect={() => setShowTrashModal(true)}
+          />
+
+          {/* Step-by-Step Daily Progress Shower (Stepper Checklist) */}
+          <DayProgressStepper
+            dayNumber={dayNumber}
+            dsaTheoryRead={isDsaRead}
+            csTheoryRead={isCsRead}
+            systemDesignRead={isSdRead}
+            solvedCount={solvedCount}
+            totalProblems={dayProblems.length}
+            mcqAnsweredCount={answeredMcqsCount}
+            totalMcqs={mcqSet.total}
+            onJumpToSection={handleJumpToSection}
+          />
+
+          {/* Segmented Filter Pills on Mobile */}
+          <div className="flex sm:hidden overflow-x-auto p-1 rounded-[var(--radius-md)] bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] gap-1">
+            <button
+              onClick={() => handleSetActiveTab('all')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'all'
+                  ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              All
+            </button>
+            <button
+              onClick={() => handleSetActiveTab('dsa')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'dsa'
+                  ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              DSA Theory
+            </button>
+            <button
+              onClick={() => handleSetActiveTab('cs')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'cs'
+                  ? 'bg-[rgb(var(--surface))] text-blue-400 shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              CS Fund
+            </button>
+            <button
+              onClick={() => handleSetActiveTab('system_design')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'system_design'
+                  ? 'bg-[rgb(var(--surface))] text-purple-400 shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              Sys Design
+            </button>
+            <button
+              onClick={() => handleSetActiveTab('problems')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'problems'
+                  ? 'bg-[rgb(var(--surface))] text-[rgb(var(--accent))] shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              Problems ({solvedCount}/5)
+            </button>
+            <button
+              onClick={() => handleSetActiveTab('mcq')}
+              className={cn(
+                'px-2.5 py-1 text-xs font-semibold rounded-[var(--radius-sm)] whitespace-nowrap transition-colors',
+                activeTab === 'mcq'
+                  ? 'bg-[rgb(var(--surface))] text-emerald-400 shadow-sm'
+                  : 'text-[rgb(var(--text-muted))]'
+              )}
+            >
+              MCQs ({answeredMcqsCount}/{mcqSet.total})
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Main Flow: Sequential Learning Blocks */}
       <div className="space-y-0">
         {/* ── FOCUS MODE: Theory Reader ── */}
-        {focusMode && (activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design') && (
+        {focusMode && (activeTab === 'all' || activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design') && (
           <FocusTheoryReader
             dayNumber={dayNumber}
             theme={day.theme}
             summary={day.summary}
             csModule={csModule}
             sdModule={sdModule}
-            initialModule={activeTab === 'dsa' ? 0 : activeTab === 'cs' ? 1 : 2}
+            initialModule={activeTab === 'cs' ? 1 : activeTab === 'system_design' ? 2 : 0}
+            onContinueToMcq={() => setActiveTab('mcq')}
           />
         )}
 
@@ -373,8 +450,54 @@ export function DayDetailClient({ dayNumber }: { dayNumber: number }) {
           />
         )}
 
-        {/* ── NORMAL MODE: Full sequential flow ── */}
-        {(!focusMode || (activeTab !== 'dsa' && activeTab !== 'cs' && activeTab !== 'system_design' && activeTab !== 'mcq')) && (
+        {/* ── FOCUS MODE: Problems View ── */}
+        {focusMode && activeTab === 'problems' && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-[rgb(var(--surface))] border border-[rgb(var(--border))] shadow-sm">
+              <div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/30 uppercase tracking-wide">
+                  Focused Practice
+                </span>
+                <h2 className="text-base font-bold text-[rgb(var(--text-primary))] mt-1">
+                  Today's 5 Problems ({solvedCount}/5 Solved)
+                </h2>
+                <p className="text-xs text-[rgb(var(--text-muted))]">
+                  Solve each problem in your editor or browser, then tick to verify.
+                </p>
+              </div>
+
+              {allSolved && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>All 5 Cleared</span>
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {dayProblems.map((problem, idx) => (
+                <ProblemRow
+                  key={problem.id}
+                  problem={problem}
+                  dayNumber={dayNumber}
+                  index={idx}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-[rgb(var(--border))]">
+              <Button size="sm" variant="secondary" onClick={() => setActiveTab('dsa')}>
+                ← Back to Theory
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setActiveTab('mcq')}>
+                Continue to MCQs →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── NORMAL MODE: Full sequential scroll flow ── */}
+        {!focusMode && (
           <>
         {/* Step 1: DSA Theory & Invariants */}
         <RevealOnScroll delay={0}>

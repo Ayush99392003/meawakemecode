@@ -26,6 +26,7 @@ interface FocusTheoryReaderProps {
   csModule: CsDailyModule | undefined;
   sdModule: SystemDesignDailyModule | undefined;
   initialModule?: 0 | 1 | 2;
+  onContinueToMcq?: () => void;
 }
 
 const MODULE_META = [
@@ -68,9 +69,15 @@ export function FocusTheoryReader({
   csModule,
   sdModule,
   initialModule = 0,
+  onContinueToMcq,
 }: FocusTheoryReaderProps) {
   const [moduleIndex, setModuleIndex] = React.useState<0 | 1 | 2>(initialModule);
   const [animKey, setAnimKey] = React.useState(0);
+
+  // Sync when initialModule changes (e.g. from tab buttons)
+  React.useEffect(() => {
+    setModuleIndex(initialModule);
+  }, [initialModule]);
 
   const { theoryRead, csTheoryRead, systemDesignRead, markTheoryRead, markCsTheoryRead, markSystemDesignRead } =
     useProgressStore();
@@ -155,7 +162,7 @@ export function FocusTheoryReader({
         className="animate-fadeIn"
       >
         {moduleIndex === 0 && (
-          <TheoryBlock dayNumber={dayNumber} theme={theme} summary={summary} />
+          <TheoryBlock dayNumber={dayNumber} theme={theme} summary={summary} forceOpen={true} />
         )}
         {moduleIndex === 1 && csModule && (
           <CsFundamentalsBlock module={csModule} dayNumber={dayNumber} />
@@ -176,21 +183,35 @@ export function FocusTheoryReader({
       </div>
 
       {/* Bottom Navigation Bar */}
-      <div className="flex items-center justify-between pt-2 border-t border-[rgb(var(--border))]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[rgb(var(--border))]">
         <Button
           size="sm"
           variant="secondary"
           onClick={() => moduleIndex > 0 && goTo((moduleIndex - 1) as 0 | 1 | 2)}
           disabled={moduleIndex === 0}
+          className="w-full sm:w-auto"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Prev Module</span>
         </Button>
 
         {allRead ? (
-          <div className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--success))]">
-            <Trophy className="w-4 h-4" />
-            <span>All Theory Modules Complete!</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span>All 3 Theory Modules Complete!</span>
+            </span>
+            {onContinueToMcq && (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={onContinueToMcq}
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 font-bold shadow-md shadow-emerald-500/20"
+              >
+                <span>Continue to MCQs (60 Qs)</span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         ) : moduleIndex < 2 ? (
           <Button
@@ -198,6 +219,7 @@ export function FocusTheoryReader({
             variant="primary"
             onClick={handleMarkAndNext}
             className={cn(
+              'w-full sm:w-auto font-semibold',
               !readState[moduleIndex]
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-md shadow-indigo-500/20'
                 : ''
@@ -212,7 +234,7 @@ export function FocusTheoryReader({
             variant="primary"
             onClick={handleMarkAndNext}
             disabled={readState[moduleIndex]}
-            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+            className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 font-bold"
           >
             <Check className="w-4 h-4" />
             <span>{readState[moduleIndex] ? 'Module Complete ✓' : 'Mark Read & Finish'}</span>

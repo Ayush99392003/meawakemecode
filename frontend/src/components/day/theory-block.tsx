@@ -25,18 +25,20 @@ export interface TheoryBlockProps {
   theme: string;
   summary: string;
   readTimeMinutes?: number;
+  forceOpen?: boolean;
 }
 
 export function TheoryBlock({
   dayNumber,
   theme,
   summary,
+  forceOpen,
 }: TheoryBlockProps) {
   const { theoryRead, markTheoryRead } = useProgressStore();
   const { preferredLanguage, setPreferredLanguage } = useSettingsStore();
 
   const isRead = !!theoryRead[dayNumber];
-  const [isOpen, setIsOpen] = React.useState(!isRead);
+  const [isOpen, setIsOpen] = React.useState(forceOpen || !isRead);
   const [copied, setCopied] = React.useState(false);
 
   const theory = getTheoryForDay(dayNumber);

@@ -342,15 +342,43 @@ export function FocusMcqCard({ dayNumber, dsaMcqs, csMcqs, systemDesignMcqs }: F
           </span>
         )}
 
-        <Button
-          size="sm"
-          variant="primary"
-          onClick={advanceQuestion}
-          disabled={currentIdx === questions.length - 1}
-        >
-          <span>Next</span>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
+        {currentIdx === questions.length - 1 ? (
+          category === 'dsa' ? (
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => switchCategory('cs')}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 font-bold"
+            >
+              <span>Next Category: CS Fund</span>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          ) : category === 'cs' ? (
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => switchCategory('sd')}
+              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 font-bold"
+            >
+              <span>Next Category: Sys Design</span>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span>All MCQs Done!</span>
+            </div>
+          )
+        ) : (
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={advanceQuestion}
+          >
+            <span>Next</span>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
