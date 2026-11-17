@@ -14,6 +14,8 @@ import {
   Calendar,
   ChevronRight,
   HelpCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   getDayByNumber,
@@ -37,6 +39,8 @@ import { SystemDesignBlock } from '@/components/day/system-design-block';
 import { DayMcqGauntlet } from '@/components/day/day-mcq-gauntlet';
 import { DayProgressStepper } from '@/components/day/day-progress-stepper';
 import { DayCompleteModal } from '@/components/day/day-complete-modal';
+import { FocusTheoryReader } from '@/components/day/focus-theory-reader';
+import { FocusMcqCard } from '@/components/day/focus-mcq-card';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Button } from '@/components/ui/button';
@@ -63,12 +67,34 @@ export default function TodayPage() {
     completeDay,
   } = useProgressStore();
 
-  const { strictMode } = useSettingsStore();
+  const { strictMode, focusMode, setFocusMode } = useSettingsStore();
 
+  const [activeTab, setActiveTab] = React.useState<
+    'all' | 'dsa' | 'cs' | 'system_design' | 'problems' | 'mcq'
+  >('all');
   const [showCelebration, setShowCelebration] = React.useState(false);
   const [showTrashModal, setShowTrashModal] = React.useState(false);
   const [timeRemaining, setTimeRemaining] = React.useState('4h remaining');
   const [encouragement, setEncouragement] = React.useState('Consistency beats intensity.');
+
+  // Keyboard shortcut: F to toggle focus, Escape to exit
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'f' || e.key === 'F') {
+        const next = !focusMode;
+        setFocusMode(next);
+        if (next && activeTab === 'all') {
+          setActiveTab('dsa');
+        }
+      } else if (e.key === 'Escape' && focusMode) {
+        setFocusMode(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [focusMode, setFocusMode, activeTab]);
 
   const trashInfo = React.useMemo(
     () => calculateTrashBadge(dayCompletions, startDate),
@@ -191,6 +217,36 @@ export default function TodayPage() {
               <Flame className="w-3.5 h-3.5 fill-current" />
               <span>{streak.current}d streak</span>
             </div>
+
+            {/* Focus Mode Toggle in Today Header */}
+            <button
+              onClick={() => {
+                const next = !focusMode;
+                setFocusMode(next);
+                if (next && activeTab === 'all') {
+                  setActiveTab('dsa');
+                }
+              }}
+              title={`${focusMode ? 'Exit' : 'Enter'} Focus Mode (Shortcut: F)`}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer select-none',
+                focusMode
+                  ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-indigo-500/30 ring-2 ring-indigo-400/60'
+                  : 'bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] text-[rgb(var(--text-primary))] hover:border-[rgb(var(--accent))] hover:bg-[rgb(var(--surface))]'
+              )}
+            >
+              <span
+                className={cn(
+                  'w-2 h-2 rounded-full shrink-0 transition-colors',
+                  focusMode ? 'bg-emerald-300 animate-pulse' : 'bg-zinc-400'
+                )}
+              />
+              {focusMode ? <EyeOff className="w-3.5 h-3.5 shrink-0" /> : <Eye className="w-3.5 h-3.5 shrink-0" />}
+              <span>{focusMode ? 'Focus ON' : 'Focus Mode'}</span>
+              <kbd className="hidden sm:inline-block px-1 rounded text-[9px] font-mono opacity-80 bg-black/20 border border-white/10">
+                F
+              </kbd>
+            </button>
           </div>
         </div>
 
@@ -244,36 +300,86 @@ export default function TodayPage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              <a href="#dsa-theory">
-                <Button size="sm" variant="secondary">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>DSA Theory</span>
-                </Button>
-              </a>
-              <a href="#cs-fundamentals">
-                <Button size="sm" variant="secondary">
-                  <Cpu className="w-3.5 h-3.5 text-blue-400" />
-                  <span>CS Fundamentals</span>
-                </Button>
-              </a>
-              <a href="#system-design">
-                <Button size="sm" variant="secondary">
-                  <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span>System Design</span>
-                </Button>
-              </a>
-              <a href="#problems-section">
-                <Button size="sm" variant="primary">
+              {/* Prominent Focus Mode Button right on the Today Card */}
+              <button
+                onClick={() => {
+                  const next = !focusMode;
+                  setFocusMode(next);
+                  if (next && activeTab === 'all') {
+                    setActiveTab('dsa');
+                  }
+                }}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer',
+                  focusMode
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-indigo-500/30 ring-2 ring-indigo-400/60'
+                    : 'bg-indigo-500/15 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/25'
+                )}
+              >
+                <span className={cn('w-2 h-2 rounded-full', focusMode ? 'bg-emerald-300 animate-pulse' : 'bg-indigo-400')} />
+                {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{focusMode ? 'Focus ON' : 'Focus Mode'}</span>
+                <kbd className="hidden sm:inline-block px-1 rounded text-[9px] font-mono opacity-80 bg-black/20 border border-white/10">F</kbd>
+              </button>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setActiveTab('dsa');
+                  setFocusMode(true);
+                }}
+                className="cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>DSA Theory</span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setActiveTab('cs');
+                  setFocusMode(true);
+                }}
+                className="cursor-pointer"
+              >
+                <Cpu className="w-3.5 h-3.5 text-blue-400" />
+                <span>CS Fundamentals</span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setActiveTab('system_design');
+                  setFocusMode(true);
+                }}
+                className="cursor-pointer"
+              >
+                <Layers className="w-3.5 h-3.5 text-purple-400" />
+                <span>System Design</span>
+              </Button>
+
+              <Link href={`/day/${currentDayNum}`}>
+                <Button size="sm" variant="primary" className="cursor-pointer">
                   <span>5 Problems</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
-              </a>
-              <a href="#mcq-section">
-                <Button size="sm" variant="secondary">
-                  <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>60 MCQs</span>
-                </Button>
-              </a>
+              </Link>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setActiveTab('mcq');
+                  setFocusMode(true);
+                }}
+                className="cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <span>60 MCQs</span>
+              </Button>
             </div>
           </div>
 
@@ -298,21 +404,151 @@ export default function TodayPage() {
         </div>
       </Card>
 
-      {/* 3. Step-by-Step Daily Progress Shower (Stepper Checklist) */}
-      <DayProgressStepper
-        dayNumber={currentDayNum}
-        dsaTheoryRead={isDsaRead}
-        csTheoryRead={isCsRead}
-        systemDesignRead={isSdRead}
-        solvedCount={solvedCountToday}
-        totalProblems={5}
-        mcqAnsweredCount={answeredMcqsCount}
-        totalMcqs={mcqSet.total}
-        onJumpToSection={handleJumpToSection}
-      />
+      {/* 3. Focus Mode Navigation OR Standard Steppers */}
+      {focusMode ? (
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-[rgb(var(--surface))] to-purple-950/40 border border-indigo-500/30 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold font-mono border border-indigo-500/40">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              FOCUS ACTIVE
+            </span>
+            <span className="text-xs text-[rgb(var(--text-muted))] hidden md:inline font-mono">
+              Press <kbd className="px-1 py-0.5 rounded bg-black/30 border border-white/10 text-[10px]">Esc</kbd> or <kbd className="px-1 py-0.5 rounded bg-black/30 border border-white/10 text-[10px]">F</kbd> to exit
+            </span>
+          </div>
+
+          {/* Section Switcher in Focus Mode */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgb(var(--surface-raised))] border border-[rgb(var(--border))] w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setActiveTab('dsa')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'all' || activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design'
+                  ? 'bg-indigo-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              Theory (3 Mods)
+            </button>
+            <button
+              onClick={() => setActiveTab('problems')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'problems'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              Problems ({solvedCountToday}/5)
+            </button>
+            <button
+              onClick={() => setActiveTab('mcq')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                activeTab === 'mcq'
+                  ? 'bg-emerald-500 text-white shadow-sm'
+                  : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]'
+              )}
+            >
+              MCQs ({answeredMcqsCount}/{mcqSet.total})
+            </button>
+          </div>
+
+          <button
+            onClick={() => setFocusMode(false)}
+            className="text-xs text-[rgb(var(--text-secondary))] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer shrink-0 font-medium"
+          >
+            Exit Focus ✕
+          </button>
+        </div>
+      ) : (
+        <DayProgressStepper
+          dayNumber={currentDayNum}
+          dsaTheoryRead={isDsaRead}
+          csTheoryRead={isCsRead}
+          systemDesignRead={isSdRead}
+          solvedCount={solvedCountToday}
+          totalProblems={5}
+          mcqAnsweredCount={answeredMcqsCount}
+          totalMcqs={mcqSet.total}
+          onJumpToSection={handleJumpToSection}
+        />
+      )}
 
       {/* 4. Sequential Learning Flow */}
       <div className="space-y-0">
+        {/* ── FOCUS MODE: Theory Reader ── */}
+        {focusMode && (activeTab === 'all' || activeTab === 'dsa' || activeTab === 'cs' || activeTab === 'system_design') && (
+          <FocusTheoryReader
+            dayNumber={currentDayNum}
+            theme={currentDayData.theme}
+            summary={currentDayData.summary}
+            csModule={csModule}
+            sdModule={sdModule}
+            initialModule={activeTab === 'cs' ? 1 : activeTab === 'system_design' ? 2 : 0}
+            onContinueToMcq={() => setActiveTab('mcq')}
+          />
+        )}
+
+        {/* ── FOCUS MODE: MCQ Card ── */}
+        {focusMode && activeTab === 'mcq' && (
+          <FocusMcqCard
+            dayNumber={currentDayNum}
+            dsaMcqs={mcqSet.dsa}
+            csMcqs={mcqSet.cs}
+            systemDesignMcqs={mcqSet.systemDesign}
+          />
+        )}
+
+        {/* ── FOCUS MODE: Problems View ── */}
+        {focusMode && activeTab === 'problems' && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-[rgb(var(--surface))] border border-[rgb(var(--border))] shadow-sm">
+              <div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/30 uppercase tracking-wide">
+                  Focused Practice
+                </span>
+                <h2 className="text-base font-bold text-[rgb(var(--text-primary))] mt-1">
+                  Today&apos;s 5 Problems ({solvedCountToday}/5 Solved)
+                </h2>
+                <p className="text-xs text-[rgb(var(--text-muted))]">
+                  Solve each problem in your editor or browser, then tick to verify.
+                </p>
+              </div>
+
+              {allSolvedToday && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>All 5 Cleared</span>
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {currentProblems.map((prob, idx) => (
+                <ProblemRow
+                  key={prob.id}
+                  problem={prob}
+                  dayNumber={currentDayNum}
+                  index={idx}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-[rgb(var(--border))]">
+              <Button size="sm" variant="secondary" onClick={() => setActiveTab('dsa')}>
+                ← Back to Theory
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setActiveTab('mcq')}>
+                Continue to MCQs →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── NORMAL MODE: Full sequential scroll flow ── */}
+        {!focusMode && (
+          <>
         {/* Step 1: DSA Core Theory */}
         <RevealOnScroll delay={0}>
           <div id="dsa-theory" className="scroll-mt-24">
@@ -419,6 +655,8 @@ export default function TodayPage() {
             />
           </div>
         </RevealOnScroll>
+          </>
+        )}
       </div>
 
       {/* Floating Day Completion Bar */}
